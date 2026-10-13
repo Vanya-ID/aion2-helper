@@ -970,11 +970,21 @@ function renderAlertStatus() {
 }
 
 function pingOverlay() {
-  if (location.protocol === 'file:') return renderAlertStatus();
+  if (location.protocol === 'file:') {
+    loadHotkey();
+    return renderAlertStatus();
+  }
   fetch(OVERLAY + '/ping', { cache: 'no-store' })
     .then(r => r.json())
-    .then(info => { overlayInfo = info; })
-    .catch(() => { overlayInfo = null; })
+    .then(info => {
+      const appeared = !overlayInfo;
+      overlayInfo = info;
+      if (appeared) loadHotkey();
+    })
+    .catch(() => {
+      overlayInfo = null;
+      if (!capturingHotkey) document.getElementById('hotkey-label').textContent = 'плашка не запущена';
+    })
     .finally(renderAlertStatus);
 }
 
@@ -1403,7 +1413,6 @@ initSettings();
 renderAll();
 pingOverlay();
 loadLatestOverlay();
-loadHotkey();
 setInterval(tick, 1000);
 setInterval(pingOverlay, 30000);
 setInterval(pushSchedule, 30000);
