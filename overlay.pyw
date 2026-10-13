@@ -15,7 +15,7 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-VERSION = '1.0.0'
+VERSION = '1.0.1'
 APP = 'Aion2Helper'
 PROTOCOL = 'aion2helper'
 REPO = 'Vanya-ID/aion2-helper'
@@ -163,11 +163,26 @@ def install():
                 'Если браузер спросит про доступ к устройствам в локальной сети — нажми «Разрешить».')
 
 
+def download(url, target):
+    curl = Path(os.environ.get('SystemRoot', r'C:\Windows')) / 'System32' / 'curl.exe'
+    if curl.exists():
+        command = [str(curl), '-sSfL', '--retry', '3', '--connect-timeout', '20', '--max-time', '600', '-o', str(target), url]
+        result = subprocess.run(command, capture_output=True, text=True, creationflags=CREATE_NO_WINDOW)
+        if result.returncode != 0:
+            raise OSError(result.stderr.strip() or f'curl exit code {result.returncode}')
+        return
+    with urllib.request.urlopen(url, timeout=60) as response, open(target, 'wb') as file:
+        while chunk := response.read(1 << 16):
+            file.write(chunk)
+
+
 def self_update():
     new_exe = HOME / 'aion2-helper.new.exe'
     old_exe = HOME / 'aion2-helper.old.exe'
     try:
-        urllib.request.urlretrieve(EXE_URL, new_exe)
+        download(EXE_URL, new_exe)
+        if new_exe.read_bytes()[:2] != b'MZ':
+            raise OSError('скачанный файл не является программой')
         old_exe.unlink(missing_ok=True)
         os.replace(INSTALLED_EXE, old_exe)
         os.replace(new_exe, INSTALLED_EXE)
@@ -176,6 +191,17 @@ def self_update():
         update_state.update(running=False, error=str(error))
         return
     messages.put('restart')
+
+
+def cleanup_old_exe():
+    old_exe = HOME / 'aion2-helper.old.exe'
+    for _ in range(120):
+        try:
+            old_exe.unlink(missing_ok=True)
+            return
+        except PermissionError:
+            time.sleep(0.5)
+    print(f'could not delete {old_exe}: still in use', file=sys.stderr, flush=True)
 
 
 def uninstall():
@@ -449,7 +475,7 @@ def main():
         return
     page = SITE if FROZEN else LOCAL_URL
     if FROZEN:
-        retry(lambda: (HOME / 'aion2-helper.old.exe').unlink(missing_ok=True))
+        threading.Thread(target=cleanup_old_exe, daemon=True).start()
     server = start_server(retry='--restart' in sys.argv)
     if server is None:
         if '--open' in sys.argv:
