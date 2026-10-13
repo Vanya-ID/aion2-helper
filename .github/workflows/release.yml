@@ -1,0 +1,29 @@
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check that the tag matches VERSION in overlay.pyw
+        shell: python
+        run: |
+          import re, sys
+          version = re.search(r"VERSION = '([^']+)'", open('overlay.pyw', encoding='utf-8').read()).group(1)
+          tag = '${{ github.ref_name }}'
+          sys.exit(0 if tag == f'v{version}' else f'tag {tag} does not match VERSION {version}')
+      - run: pip install pyinstaller==6.11.1
+      - run: pyinstaller --onefile --noconsole --name aion2-helper --icon overlay.ico overlay.pyw
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/aion2-helper.exe

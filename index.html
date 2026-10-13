@@ -41,6 +41,7 @@ h1 small { color: var(--muted); font-weight: 400; margin-left: 6px; font-size: 1
 .btn:hover { border-color: var(--accent); }
 a.btn { color: var(--text); text-decoration: none; }
 .btn-sm { padding: 0 8px; font-size: 12px; line-height: 20px; }
+.btn-accent { border-color: var(--soon); color: var(--soon); }
 .pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 4px 2px 10px; margin-right: 6px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel-2); white-space: nowrap; }
 .maps { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .maps .k { color: var(--muted); }
@@ -119,6 +120,7 @@ footer ul { margin: 4px 0 0; padding-left: 18px; }
 
   <div class="alertbar">
     <span id="alert-status"></span>
+    <span id="overlay-actions"></span>
     <button class="btn" data-act="test">Проверить алерт</button>
     <button class="btn" data-act="test-delayed">Тест через 15 сек</button>
     <button class="btn" data-act="overlay-quit">Выключить плашку</button>
@@ -155,6 +157,7 @@ footer ul { margin: 4px 0 0; padding-left: 18px; }
       <div class="opt">Горячая клавиша «что дальше»: <b id="hotkey-label">—</b>
         <button class="btn" data-act="hotkey-change" id="hotkey-btn">Изменить</button> <span class="note" id="hotkey-status"></span></div>
       <label class="opt"><input type="checkbox" data-setting="showHidden"> Показывать скрытые пункты</label>
+      <div class="opt" id="uninstall-row" hidden><button class="btn" data-act="overlay-uninstall">Удалить плашку с компьютера</button> <span class="note">трекер на сайте останется</span></div>
     </div>
   </details>
   <div class="grid">
@@ -177,7 +180,7 @@ footer ul { margin: 4px 0 0; padding-left: 18px; }
   </div>
 
   <footer>
-    <p><b>Плашка поверх игры и горячая клавиша</b> работают через маленькую программу на компьютере. Как установить и обновить: <a href="https://github.com/Vanya-ID/aion2-helper#readme" target="_blank" rel="noopener">github.com/Vanya-ID/aion2-helper</a>.</p>
+    <p><b>Плашка поверх игры и горячая клавиша</b> работают через маленькую программу на компьютере: кнопка «Скачать плашку» вверху страницы, один раз запустить скачанный файл. Подробнее: <a href="https://github.com/Vanya-ID/aion2-helper#readme" target="_blank" rel="noopener">github.com/Vanya-ID/aion2-helper</a>.</p>
     Данные на 10.10.2026. NCSOFT не публиковала расписание Global — времена собраны игроками. Если страница расходится с игрой, верь таймеру сброса в подсказке счётчика в клиенте; после патча правь блок данных в начале скрипта.
     <ul>
       <li><a href="https://daevaguides.com/en/guides/timers/index.html">daevaguides.com — таймеры EU</a> (6 окт)</li>
@@ -613,6 +616,8 @@ const DAY = 24 * HOUR;
 const STORE_KEY = 'aion2-tracker-v1';
 const BASE_TITLE = document.title;
 const OVERLAY = location.origin === 'http://127.0.0.1:47123' ? '' : 'http://127.0.0.1:47123';
+const OVERLAY_EXE_URL = 'https://github.com/Vanya-ID/aion2-helper/releases/latest/download/aion2-helper.exe';
+const RELEASES_API = 'https://api.github.com/repos/Vanya-ID/aion2-helper/releases/latest';
 const LOCAL_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 const fmtClock = new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -631,7 +636,8 @@ let toastTimer = 0;
 let cardTimer = 0;
 let cardTerm = null;
 let lastPointer = 'mouse';
-let overlayOk = false;
+let overlayInfo = null;
+let latestOverlay = '';
 
 for (const entry of Object.values(INFO)) {
   if (entry.forms) entry.re = new RegExp(`(?<!\\p{L})(?:${entry.forms})(?!\\p{L})`, 'iu');
@@ -944,17 +950,39 @@ function renderResources() {
 }
 
 function renderAlertStatus() {
-  const text = location.protocol === 'file:'
-    ? 'не подключена — открой трекер с сайта или ярлыком'
-    : overlayOk ? 'подключена' : 'программа не установлена или не запущена — инструкция внизу страницы';
+  const info = overlayInfo;
+  let text = 'не запущена';
+  if (location.protocol === 'file:') text = 'не подключена — открой трекер с сайта или ярлыком';
+  else if (info && info.updating) text = 'обновляется…';
+  else if (info) text = `подключена, версия ${info.version}`;
+  if (info && info.updateError) text += ` · обновить не удалось: ${info.updateError}`;
   document.getElementById('alert-status').textContent = `Плашка поверх игры: ${text}`;
+  const actions = [];
+  if (!info && location.protocol !== 'file:') {
+    actions.push('<a class="btn" href="aion2helper://start" data-launch>Запустить плашку</a>');
+    actions.push(`<a class="btn" href="${OVERLAY_EXE_URL}">Скачать плашку</a>`);
+  }
+  if (info && info.frozen && latestOverlay && latestOverlay !== info.version && !info.updating) {
+    actions.push(`<button class="btn btn-accent" data-act="overlay-update">Обновить плашку до ${latestOverlay}</button>`);
+  }
+  document.getElementById('overlay-actions').innerHTML = actions.join(' ');
+  document.getElementById('uninstall-row').hidden = !(info && info.frozen);
 }
 
 function pingOverlay() {
   if (location.protocol === 'file:') return renderAlertStatus();
   fetch(OVERLAY + '/ping', { cache: 'no-store' })
-    .then(r => { overlayOk = r.ok; })
-    .catch(() => { overlayOk = false; })
+    .then(r => r.json())
+    .then(info => { overlayInfo = info; })
+    .catch(() => { overlayInfo = null; })
+    .finally(renderAlertStatus);
+}
+
+function loadLatestOverlay() {
+  fetch(RELEASES_API, { cache: 'no-store' })
+    .then(r => (r.ok ? r.json() : null))
+    .then(release => { latestOverlay = release ? release.tag_name.replace(/^v/, '') : ''; })
+    .catch(() => { latestOverlay = ''; })
     .finally(renderAlertStatus);
 }
 
@@ -962,8 +990,8 @@ function sendToOverlay(title, body) {
   if (location.protocol === 'file:') return;
   const seconds = Math.min(60, Math.max(3, state.settings.bannerSec));
   fetch(OVERLAY + '/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, body, seconds }) })
-    .then(r => { overlayOk = r.ok; })
-    .catch(() => { overlayOk = false; })
+    .then(r => { if (!r.ok) overlayInfo = null; })
+    .catch(() => { overlayInfo = null; })
     .finally(renderAlertStatus);
 }
 
@@ -1210,8 +1238,8 @@ function pushSchedule() {
   }));
   const seconds = Math.min(60, Math.max(3, state.settings.bannerSec));
   fetch(OVERLAY + '/schedule', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ events, seconds }) })
-    .then(r => { overlayOk = r.ok; })
-    .catch(() => { overlayOk = false; })
+    .then(r => { if (!r.ok) overlayInfo = null; })
+    .catch(() => { overlayInfo = null; })
     .finally(renderAlertStatus);
 }
 
@@ -1298,6 +1326,19 @@ document.addEventListener('click', e => {
   if (act === 'test') return fire('Проверка плашки', 'Плашка работает');
   if (act === 'spend') return spend(btn.dataset.id, Number(btn.dataset.n));
   if (act === 'hotkey-change') return startHotkeyCapture();
+  if (act === 'overlay-update') {
+    fetch(OVERLAY + '/update', { method: 'POST' })
+      .catch(() => {})
+      .then(() => [1000, 8000, 20000].forEach(ms => setTimeout(pingOverlay, ms)));
+    return;
+  }
+  if (act === 'overlay-uninstall') {
+    if (!confirm('Удалить плашку с компьютера? Трекер на сайте останется.')) return;
+    fetch(OVERLAY + '/uninstall', { method: 'POST' })
+      .catch(() => {})
+      .then(() => setTimeout(pingOverlay, 3000));
+    return;
+  }
   if (act === 'lead-add' || act === 'warn-add') {
     const [key, inputId, max] = act === 'lead-add' ? ['leads', 'lead-new', 240] : ['warnHs', 'warn-new', 168];
     const raw = document.getElementById(inputId).value.trim();
@@ -1350,6 +1391,9 @@ document.addEventListener('change', e => {
 
 window.addEventListener('focus', () => { document.title = BASE_TITLE; });
 document.addEventListener('keydown', onHotkeyKeydown, true);
+document.addEventListener('click', e => {
+  if (e.target.closest('[data-launch]')) [3000, 8000].forEach(ms => setTimeout(pingOverlay, ms));
+});
 
 const zoneLabel = localZoneLabel(Date.now());
 document.getElementById('local-label').textContent = `Твоё время · ${zoneLabel}`;
@@ -1358,6 +1402,7 @@ document.getElementById('banner').hidden = storageOk;
 initSettings();
 renderAll();
 pingOverlay();
+loadLatestOverlay();
 loadHotkey();
 setInterval(tick, 1000);
 setInterval(pingOverlay, 30000);

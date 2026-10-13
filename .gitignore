@@ -1,3 +1,6 @@
 overlay-settings.json
 overlay.log
 __pycache__/
+build/
+dist/
+*.spec
