@@ -2,186 +2,390 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Aion 2 — трекер</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="darkreader-lock">
+<title>Aion 2 — помощник</title>
 <style>
 :root {
   --bg: #0e1014;
   --panel: #161920;
   --panel-2: #1d212b;
   --line: #262b36;
+  --line-strong: #4a5263;
   --text: #e7e9ef;
   --muted: #8d94a5;
   --accent: #8ab4ff;
   --live: #3ecf8e;
   --soon: #f2b84b;
   --warn: #ff7a6b;
+  --z-altgard: #8ab4ff;
+  --z-abyss: #c39bff;
+  --z-arena: #ff9f5a;
+  --z-server: #8d94a5;
+  --s1: .25rem;
+  --s2: .5rem;
+  --s3: .75rem;
+  --s4: 1rem;
+  --s5: 1.5rem;
+  --s6: 2rem;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-pill: 999px;
+  --fs-xs: .75rem;
+  --fs-sm: .875rem;
+  --fs-md: 1rem;
+  --fs-lg: 1.25rem;
+  --fs-xl: 1.75rem;
+  --shadow-pop: 0 12px 32px rgba(0, 0, 0, .5);
+  --tab-h: 3.5rem;
+  color-scheme: dark;
 }
+html { font-size: 15px; }
+@media (min-width: 1800px) { html { font-size: 16px; } }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 body {
   background: var(--bg);
   color: var(--text);
-  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  padding: 16px;
+  font: var(--fs-md)/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 a { color: var(--accent); }
 button, input { font: inherit; color: inherit; }
-.wrap { max-width: 1440px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
-.top { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; }
-h1 { font-size: 18px; margin: 0; }
-h1 small { color: var(--muted); font-weight: 400; margin-left: 6px; font-size: 14px; }
-.chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.chip .k { color: var(--muted); margin-right: 6px; }
-.chip b { font-weight: 600; }
-.alertbar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
-#alert-status { color: var(--muted); margin-right: auto; }
-.btn { background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+[tabindex="-1"]:focus { outline: none; }
+[hidden] { display: none !important; }
+svg { flex: none; }
+.z-altgard { --zc: var(--z-altgard); }
+.z-abyss { --zc: var(--z-abyss); }
+.z-arena { --zc: var(--z-arena); }
+.z-server { --zc: var(--z-server); }
+
+.appbar { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.appbar-in { max-width: 2000px; min-height: 3.5rem; margin: 0 auto; padding: var(--s2) var(--s4); display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s5); }
+.brand { margin: 0; font-size: var(--fs-md); font-weight: 700; white-space: nowrap; }
+.brand small { margin-left: var(--s1); color: var(--muted); font-size: var(--fs-sm); font-weight: 400; }
+.clock { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--s3); color: var(--muted); font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
+.clock b { color: var(--text); font-weight: 600; }
+.clock .clk { font-size: var(--fs-lg); }
+.actions { display: flex; align-items: center; gap: var(--s2); margin-left: auto; }
+.ov { display: flex; align-items: center; gap: var(--s1); padding: 3px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-pill); }
+.ov-status { display: inline-flex; align-items: center; gap: var(--s2); min-height: 1.75rem; padding: 0 var(--s3) 0 var(--s2); background: none; border: 0; border-radius: var(--r-pill); font-size: var(--fs-sm); white-space: nowrap; cursor: pointer; }
+.ov-status:hover { background: var(--panel-2); }
+.ov .btn { border-radius: var(--r-pill); }
+.dot { flex: none; width: .55rem; height: .55rem; border-radius: 50%; background: var(--muted); }
+.dot.ok { background: var(--live); box-shadow: 0 0 0 3px color-mix(in srgb, var(--live) 25%, transparent); }
+.dot.bad { background: var(--warn); }
+.dot.wait { background: var(--soon); }
+.tbtn { display: inline-flex; align-items: center; gap: var(--s2); min-height: 2.25rem; padding: 0 var(--s2); background: none; border: 1px solid transparent; border-radius: var(--r-sm); color: var(--muted); font-size: var(--fs-sm); cursor: pointer; }
+.tbtn:hover, .tbtn[aria-expanded=true] { background: var(--panel-2); border-color: var(--line); color: var(--text); }
+.tbtn svg { width: 1.15rem; height: 1.15rem; }
+.tbtn-l { display: none; }
+@media (min-width: 1000px) { .tbtn-l { display: inline; } }
+.menu-wrap { position: relative; }
+.menu { position: absolute; top: calc(100% + var(--s1)); right: 0; z-index: 30; display: grid; min-width: 17rem; padding: var(--s1); background: var(--panel-2); border: 1px solid var(--line-strong); border-radius: var(--r-md); box-shadow: var(--shadow-pop); }
+.menu .k { padding: var(--s2) var(--s3) var(--s1); color: var(--muted); font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .06em; }
+.menu a { padding: var(--s2) var(--s3); border-radius: var(--r-sm); color: var(--text); text-decoration: none; }
+.menu a:hover { background: var(--panel); }
+
+.wrap { max-width: 2000px; margin: 0 auto; padding: var(--s4); display: flex; flex-direction: column; gap: var(--s4); }
+.banner { padding: var(--s2) var(--s3); background: color-mix(in srgb, var(--warn) 12%, transparent); border: 1px solid var(--warn); border-radius: var(--r-md); }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
+.card > h2 { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: var(--s1) var(--s3); margin: 0; padding: var(--s3) var(--s4); font-size: var(--fs-lg); font-weight: 700; border-bottom: 1px solid var(--line); }
+.card > h2:has(+ .progress) { border-bottom: 0; }
+.h2-meta { color: var(--muted); font-size: var(--fs-sm); font-weight: 400; font-variant-numeric: tabular-nums; }
+.h2-meta b { color: var(--text); font-weight: 600; }
+.progress { height: 4px; background: var(--line); }
+.progress i { display: block; width: 0; height: 100%; background: var(--live); transition: width .3s; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--s1); min-height: 2rem; padding: 0 var(--s3); background: var(--panel-2); border: 1px solid var(--line-strong); border-radius: var(--r-sm); color: var(--text); font-size: var(--fs-sm); text-decoration: none; white-space: nowrap; cursor: pointer; }
 .btn:hover { border-color: var(--accent); }
-a.btn { color: var(--text); text-decoration: none; }
-.btn-sm { padding: 0 8px; font-size: 12px; line-height: 20px; }
+.btn:disabled { opacity: .55; cursor: default; border-color: var(--line-strong); }
+.btn-sm { min-height: 1.75rem; padding: 0 var(--s2); }
+.btn-primary { background: color-mix(in srgb, var(--accent) 18%, var(--panel-2)); border-color: var(--accent); }
 .btn-accent { border-color: var(--soon); color: var(--soon); }
-.pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 4px 2px 10px; margin-right: 6px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel-2); white-space: nowrap; }
-.maps { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.maps .k { color: var(--muted); }
-.banner { background: rgba(255, 122, 107, .12); border: 1px solid var(--warn); border-radius: 10px; padding: 8px 12px; }
-.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); align-items: start; }
-.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
-.card h2 { display: flex; flex-wrap: wrap; gap: 4px 12px; justify-content: space-between; align-items: baseline; margin: 0; padding: 12px 14px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); border-bottom: 1px solid var(--line); background: var(--panel-2); }
-.card h2 span { text-transform: none; letter-spacing: 0; font-weight: 400; font-variant-numeric: tabular-nums; }
-.card h2 b { color: var(--text); font-weight: 600; }
-.card div + h2 { border-top: 1px solid var(--line); }
-.row { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 2px 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); align-items: start; }
+.btn-danger { color: var(--warn); }
+.btn-danger:hover { border-color: var(--warn); }
+.link { padding: 0; background: none; border: 0; color: var(--accent); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.icon { display: inline-grid; place-items: center; width: 1.75rem; height: 1.75rem; padding: 0; background: none; border: 0; border-radius: var(--r-sm); color: var(--muted); cursor: pointer; }
+.icon:hover { background: var(--panel-2); color: var(--text); }
+.icon svg { width: 1rem; height: 1rem; }
+.bell.on { color: var(--soon); }
+.bell.on svg { fill: currentColor; }
+
+.now { display: grid; gap: var(--s3); padding: var(--s3) var(--s4) var(--s4); }
+.now-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: var(--s1) var(--s4); }
+.now-head h2 { margin: 0; font-size: var(--fs-lg); }
+.hint { color: var(--muted); font-size: var(--fs-xs); }
+.hint-touch { display: none; }
+@media (hover: none) {
+  .hint-mouse { display: none; }
+  .hint-touch { display: inline; }
+}
+.zone::before, .tl-lanes span::before { content: ''; display: inline-block; flex: none; width: .55rem; height: .55rem; margin-right: .35em; border-radius: 2px; background: var(--zc); }
+.tl { --lane: .9rem; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: var(--s3); }
+.tl-lanes { display: grid; grid-auto-rows: var(--lane); row-gap: 3px; max-width: 14rem; padding: 5px 0; font-size: var(--fs-xs); }
+.tl-lanes span { overflow: hidden; line-height: var(--lane); white-space: nowrap; text-overflow: ellipsis; }
+.tl-lanes span::before { vertical-align: -.05em; }
+.tl-track { position: relative; height: calc(10px + var(--lanes, 1) * var(--lane) + (var(--lanes, 1) - 1) * 3px); background: var(--panel-2); border-radius: var(--r-sm); overflow: hidden; cursor: crosshair; }
+.tl-grid { position: absolute; top: 0; bottom: 0; width: 1px; background: color-mix(in srgb, var(--line) 45%, transparent); }
+.tl-grid.maj { background: var(--line-strong); }
+.tl-ruler { grid-column: 2; position: relative; height: 1.35rem; color: var(--muted); font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
+.tl-ruler i { position: absolute; bottom: 0; width: 1px; height: 3px; background: var(--line-strong); }
+.tl-ruler i.maj { height: 6px; background: var(--muted); }
+.tl-ruler span { position: absolute; bottom: 7px; transform: translateX(-50%); line-height: 1; }
+.tl-ruler span.maj { color: var(--text); font-weight: 600; }
+.tl-nowt { position: absolute; bottom: 5px; z-index: 1; padding: 1px 4px; transform: translateX(-50%); border-radius: 3px; background: var(--text); color: var(--bg); font-weight: 700; line-height: 1.1; }
+.tl-past { position: absolute; top: 0; bottom: 0; left: 0; width: calc(100% / 24); background: rgba(0, 0, 0, .3); }
+.tl-m { position: absolute; height: var(--lane); min-width: 3px; border-radius: 3px; background: var(--zc); color: var(--bg); font-size: var(--fs-xs); font-weight: 600; line-height: var(--lane); cursor: pointer; }
+.tl-m::after { content: ''; position: absolute; inset: -2px -5px; }
+.tl-m i { display: block; overflow: hidden; padding: 0 4px; font-style: normal; white-space: nowrap; text-overflow: ellipsis; }
+.tl-m.past { opacity: .35; }
+.tl-m:hover { z-index: 2; box-shadow: 0 0 0 2px var(--text); }
+.tl-now { position: absolute; top: 0; bottom: 0; left: calc(100% / 24); width: 2px; margin-left: -1px; background: var(--text); }
+.tl-cursor { position: absolute; top: 0; bottom: 0; width: 1px; background: color-mix(in srgb, var(--text) 55%, transparent); pointer-events: none; }
+.tl-hours { grid-column: 2; position: relative; height: 1.1rem; margin-top: 2px; color: var(--muted); font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
+.tl-hours span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.tl-hours .now-l { color: var(--text); font-weight: 600; }
+#tip { position: fixed; z-index: 61; display: grid; gap: 2px; max-width: 18rem; padding: var(--s2) var(--s3); background: var(--panel-2); border: 1px solid var(--line-strong); border-radius: var(--r-sm); box-shadow: var(--shadow-pop); font-size: var(--fs-sm); pointer-events: none; }
+#tip .m { color: var(--muted); }
+.upnext { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: var(--s2); }
+.un { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: var(--s3); align-items: center; padding: var(--s2) var(--s3); background: var(--panel-2); border: 1px solid var(--line); border-left: 3px solid var(--zc); border-radius: var(--r-sm); }
+.un .t { grid-row: 1 / 3; font-size: var(--fs-lg); font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.un .t small { display: block; color: var(--muted); font-size: var(--fs-xs); font-weight: 500; text-transform: uppercase; letter-spacing: .05em; }
+.un .n { font-weight: 600; line-height: 1.25; }
+.un .s { color: var(--muted); font-size: var(--fs-sm); }
+.un.live { background: color-mix(in srgb, var(--live) 9%, var(--panel-2)); border-color: color-mix(in srgb, var(--live) 40%, var(--line)); border-left-color: var(--live); }
+.un.live .t, .un.live .t small { color: var(--live); }
+.un.soon .t { color: var(--soon); }
+.hourly { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s4); color: var(--muted); font-size: var(--fs-sm); }
+.hourly .k { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .06em; }
+.hr { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0 var(--s1); }
+.hr b, .hr .term { color: var(--text); }
+.hr b, .hr-t { font-variant-numeric: tabular-nums; }
+
+.layout { display: grid; gap: var(--s4); align-items: start; }
+.col { display: flex; flex-direction: column; gap: var(--s4); min-width: 0; }
+@media (min-width: 700px) {
+  .layout { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1200px) {
+  .layout { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: auto 1fr; grid-template-areas: "ev day res" "ev week res"; }
+  .col { display: contents; }
+  .pane-ev { grid-area: ev; }
+  .pane-day { grid-area: day; }
+  .pane-week { grid-area: week; }
+  .pane-res { grid-area: res; }
+}
+@media (min-width: 1800px) {
+  .layout { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: auto; grid-template-areas: "ev day week res"; }
+}
+
+.row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--s1) var(--s3); align-items: start; padding: var(--s3) var(--s4); border-bottom: 1px solid var(--line); }
 .row:last-child { border-bottom: 0; }
-.row.is-hidden { opacity: .4; }
-.row.live { box-shadow: inset 3px 0 0 var(--live); background: rgba(62, 207, 142, .06); }
-.row.soon { box-shadow: inset 3px 0 0 var(--soon); background: rgba(242, 184, 75, .06); }
-.row.capped { box-shadow: inset 3px 0 0 var(--warn); background: rgba(255, 122, 107, .06); }
+.row > .icon:first-child, .side > .icon { margin-top: -.15rem; }
+.row.live { background: color-mix(in srgb, var(--live) 7%, transparent); box-shadow: inset 3px 0 0 var(--live); }
+.row.soon { background: color-mix(in srgb, var(--soon) 7%, transparent); box-shadow: inset 3px 0 0 var(--soon); }
 .name { font-weight: 600; }
-.note { color: var(--muted); font-size: 12px; }
-.tag { display: inline-block; font-size: 11px; font-weight: 500; padding: 0 6px; border-radius: 4px; background: var(--panel-2); color: var(--muted); margin-left: 6px; vertical-align: 1px; }
-.tag.unconf { color: var(--soon); }
-.side { display: flex; gap: 6px; align-items: flex-start; }
+.note { color: var(--muted); font-size: var(--fs-sm); }
+.note:empty { display: none; }
+.zone { color: var(--zc); font-weight: 500; white-space: nowrap; }
+.tag { display: inline-block; margin-left: var(--s2); padding: 0 var(--s1); border-radius: 4px; background: var(--panel-2); color: var(--soon); font-size: var(--fs-xs); font-weight: 500; vertical-align: 1px; }
+.side { display: flex; align-items: flex-start; gap: var(--s1); }
 .when { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .when .big { font-weight: 600; }
-.when .sub { color: var(--muted); font-size: 12px; }
+.when .sub { color: var(--muted); font-size: var(--fs-sm); }
+.when .sub span + span::before { content: ' · '; }
+.approx { margin-right: .25em; color: var(--soon); cursor: help; }
 .t-live { color: var(--live); }
 .t-soon { color: var(--soon); }
 .t-warn { color: var(--warn); }
-.icon { background: none; border: 0; padding: 2px; cursor: pointer; line-height: 1; border-radius: 4px; color: var(--muted); }
-.icon:hover { background: var(--panel-2); color: var(--text); }
-.bell { filter: grayscale(1); opacity: .35; }
-.bell.on { filter: none; opacity: 1; }
-.check label { cursor: pointer; }
-.check input { margin: 3px 0 0; width: 16px; height: 16px; accent-color: var(--live); }
-.term { text-decoration: underline dotted var(--accent); text-underline-offset: 3px; cursor: help; }
+.check input { width: 1.15rem; height: 1.15rem; margin: .15rem 0 0; accent-color: var(--live); cursor: pointer; }
+.check .main { cursor: pointer; }
+.check.done .name { color: var(--muted); font-weight: 500; text-decoration: line-through; }
+.check.done .term { text-decoration: none; }
+.empty { margin: 0; padding: var(--s4); color: var(--muted); font-size: var(--fs-sm); }
+.empty + .row { border-top: 1px solid var(--line); }
+.term { border-radius: 2px; text-decoration: underline dotted var(--accent); text-underline-offset: 3px; cursor: help; }
 .term:hover { color: var(--accent); }
-#card { position: fixed; z-index: 10; display: none; width: min(340px, calc(100vw - 32px)); max-height: min(440px, calc(100vh - 32px)); overflow: auto; padding: 12px 14px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 12px 32px rgba(0, 0, 0, .5); font-size: 13px; line-height: 1.5; }
-#card.show { display: block; }
-#card .card-head { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
-#card img { width: 64px; height: 64px; object-fit: contain; flex: none; border-radius: 6px; background: var(--panel); }
-#card h3 { margin: 0; font-size: 14px; }
-#card p { margin: 0 0 6px; }
-#card ul { margin: 0 0 6px; padding-left: 18px; }
-#card > :last-child { margin-bottom: 0; }
-#card .unc { color: var(--soon); font-size: 12px; }
-.check.done .name { text-decoration: line-through; color: var(--muted); }
-.meter { height: 4px; background: var(--panel-2); border-radius: 2px; overflow: hidden; margin: 6px 0; }
-.meter i { display: block; height: 100%; width: 0; background: var(--accent); }
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 11rem), 1fr)); gap: var(--s3); padding: var(--s3); }
+.tile { display: flex; flex-direction: column; gap: var(--s2); min-width: 0; padding: var(--s3); background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--r-md); }
+.tile.capped { border-color: color-mix(in srgb, var(--warn) 55%, var(--line)); }
+.tile-head { display: flex; align-items: flex-start; gap: 2px; }
+.tile-head .name { flex: 1; min-width: 0; margin-right: var(--s1); }
+.tile-head .icon { margin-top: -.2rem; }
+.val { align-self: flex-start; display: inline-flex; align-items: baseline; gap: .3em; padding: 0; background: none; border: 0; border-bottom: 1px dashed var(--line-strong); font-variant-numeric: tabular-nums; cursor: text; }
+.val:hover { border-bottom-color: var(--accent); }
+.val b { font-size: var(--fs-xl); font-weight: 700; line-height: 1.1; }
+.val span { color: var(--muted); }
+.tile.capped .val b { color: var(--warn); }
+.num { width: 4.5rem; min-height: 2rem; padding: 0 var(--s2); background: var(--bg); border: 1px solid var(--line-strong); border-radius: var(--r-sm); color: var(--text); font-variant-numeric: tabular-nums; }
+.num:hover { border-color: var(--muted); }
+.val-input { width: 7rem; font-size: var(--fs-lg); }
+.meter { height: 6px; background: var(--line-strong); border-radius: 3px; overflow: hidden; }
+.meter i { display: block; width: 0; height: 100%; background: var(--accent); }
 .meter i.full { background: var(--warn); }
-.inputs { display: flex; flex-wrap: wrap; gap: 6px 12px; color: var(--muted); font-size: 12px; }
-.inputs input, .settings input[type=number] { width: 64px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; color: var(--text); }
-.settings summary { cursor: pointer; padding: 12px 14px; font-weight: 600; }
-.settings-body { display: grid; gap: 10px; padding: 0 14px 14px; }
-.settings fieldset { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; margin: 0; display: grid; gap: 6px; }
-.settings legend { color: var(--muted); padding: 0 4px; }
-.opt { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-footer { color: var(--muted); font-size: 12px; }
-footer ul { margin: 4px 0 0; padding-left: 18px; }
-#toast { position: fixed; right: 16px; bottom: 16px; max-width: min(420px, calc(100vw - 32px)); background: var(--panel-2); border: 1px solid var(--soon); border-radius: 10px; padding: 10px 14px; box-shadow: 0 8px 24px rgba(0, 0, 0, .4); opacity: 0; visibility: hidden; transform: translateY(12px); transition: opacity .2s, transform .2s, visibility .2s; }
+.tile .sub { color: var(--muted); font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
+.tick-line { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--s1); }
+.spend { display: flex; gap: var(--s2); margin-top: auto; }
+.spend .btn { flex: 1; }
+
+footer { color: var(--muted); font-size: var(--fs-sm); }
+footer p { margin: 0 0 var(--s2); }
+footer ul { margin: var(--s1) 0 0; padding-left: 1.2rem; }
+
+.tabbar { display: none; }
+.badge { min-width: 1.3rem; padding: 0 .35rem; border-radius: var(--r-pill); background: var(--line-strong); color: var(--text); font-size: var(--fs-xs); font-weight: 600; line-height: 1.3rem; }
+.badge:empty { display: none; }
+
+.scrim { position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, .55); }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 41; display: flex; flex-direction: column; width: min(440px, 100vw); background: var(--panel); border-left: 1px solid var(--line-strong); box-shadow: var(--shadow-pop); }
+.drawer-head { display: flex; align-items: center; justify-content: space-between; padding: var(--s2) var(--s2) var(--s2) var(--s4); border-bottom: 1px solid var(--line); }
+.drawer-head h2 { margin: 0; font-size: var(--fs-lg); }
+.drawer-body { flex: 1; overflow: auto; overscroll-behavior: contain; padding: var(--s4) var(--s4) var(--s6); }
+.set { display: grid; gap: var(--s3); }
+.set + .set { margin-top: var(--s5); padding-top: var(--s5); border-top: 1px solid var(--line); }
+.set h3 { margin: 0; color: var(--muted); font-size: var(--fs-xs); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; }
+.set p { margin: 0; }
+.set fieldset { display: grid; gap: var(--s2); margin: 0; padding: var(--s2) var(--s3) var(--s3); border: 1px solid var(--line); border-radius: var(--r-md); }
+.set legend { padding: 0 var(--s1); color: var(--muted); font-size: var(--fs-sm); }
+.field { display: grid; gap: var(--s2); }
+.opt { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
+.opt:empty { display: none; }
+.opt.top { flex-wrap: nowrap; align-items: flex-start; }
+.opt.top input { margin-top: .2rem; }
+label.opt { cursor: pointer; }
+.opt input[type=checkbox], .opt input[type=radio] { flex: none; width: 1.1rem; height: 1.1rem; margin: 0; accent-color: var(--accent); }
+.pills { display: flex; flex-wrap: wrap; gap: var(--s1); }
+.pill { display: inline-flex; align-items: center; gap: 2px; min-height: 2rem; padding-left: var(--s3); background: var(--panel-2); border: 1px solid var(--line-strong); border-radius: var(--r-pill); font-size: var(--fs-sm); white-space: nowrap; }
+.pill .icon { border-radius: 50%; }
+.ov-line { display: flex; align-items: center; gap: var(--s2); }
+.hid { display: grid; gap: var(--s1); margin: 0; padding: 0; list-style: none; }
+.hid li { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); }
+
+#card { position: fixed; z-index: 60; display: none; width: min(22rem, calc(100vw - 2rem)); max-height: min(30rem, calc(100vh - 2rem)); overflow: auto; padding: var(--s3) var(--s4); background: var(--panel-2); border: 1px solid var(--line-strong); border-radius: var(--r-md); box-shadow: var(--shadow-pop); font-size: var(--fs-sm); line-height: 1.5; }
+#card.show { display: block; }
+#card .card-head { display: flex; align-items: center; gap: var(--s3); margin-bottom: var(--s2); }
+#card img { flex: none; width: 4rem; height: 4rem; object-fit: contain; border-radius: var(--r-sm); background: var(--panel); }
+#card h3 { margin: 0; font-size: var(--fs-md); }
+#card p { margin: 0 0 var(--s2); }
+#card ul { margin: 0 0 var(--s2); padding-left: 1.2rem; }
+#card > :last-child { margin-bottom: 0; }
+#card .unc { color: var(--soon); font-size: var(--fs-xs); }
+#toast { position: fixed; right: var(--s4); bottom: var(--s4); z-index: 50; display: flex; align-items: center; gap: var(--s2); max-width: min(28rem, calc(100vw - 2rem)); padding: var(--s2) var(--s2) var(--s2) var(--s4); background: var(--panel-2); border: 1px solid var(--soon); border-radius: var(--r-md); box-shadow: var(--shadow-pop); opacity: 0; visibility: hidden; transform: translateY(.75rem); transition: opacity .2s, transform .2s, visibility .2s; }
 #toast.show { opacity: 1; visibility: visible; transform: none; }
+#toast-text { flex: 1; }
+
+@media (max-width: 999px) {
+  .brand small { display: none; }
+}
+@media (max-width: 699px) {
+  .appbar { position: static; }
+  .appbar-in { padding: var(--s2) var(--s3); gap: var(--s1) var(--s3); }
+  .ov { display: none; }
+  .clock { order: 3; width: 100%; }
+  .wrap { padding: var(--s3) var(--s3) calc(var(--tab-h) + env(safe-area-inset-bottom) + var(--s4)); gap: var(--s3); }
+  .layout { gap: var(--s3); }
+  body[data-tab=now] [data-pane]:not([data-pane=now]),
+  body[data-tab=today] [data-pane]:not([data-pane=today]),
+  body[data-tab=week] [data-pane]:not([data-pane=week]),
+  body[data-tab=res] [data-pane]:not([data-pane=res]) { display: none; }
+  .when .sub span:nth-child(n+3) { display: none; }
+  .tl-hours .odd { display: none; }
+  .tl-lanes { max-width: 7rem; }
+  .tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; display: grid; grid-template-columns: repeat(4, 1fr); padding-bottom: env(safe-area-inset-bottom); background: color-mix(in srgb, var(--panel) 94%, transparent); backdrop-filter: blur(8px); border-top: 1px solid var(--line-strong); }
+  .tabbar button { display: flex; align-items: center; justify-content: center; gap: var(--s1); min-height: var(--tab-h); padding: 0 var(--s1); background: none; border: 0; border-top: 2px solid transparent; color: var(--muted); font-size: var(--fs-sm); cursor: pointer; }
+  .tabbar button[aria-current=page] { border-top-color: var(--accent); color: var(--text); font-weight: 600; }
+  #toast { left: var(--s3); right: var(--s3); bottom: calc(var(--tab-h) + env(safe-area-inset-bottom) + var(--s2)); max-width: none; }
+}
+@media (max-width: 519px) {
+  .row:not(.check) { grid-template-columns: auto minmax(0, 1fr); }
+  .row:not(.check) .side { grid-column: 2 / -1; justify-content: space-between; }
+  .row .when { text-align: left; }
+}
+@media (pointer: coarse) {
+  .icon { width: max(44px, 2.75rem); height: max(44px, 2.75rem); }
+  .icon svg { width: 1.15rem; height: 1.15rem; }
+  .btn, .tbtn, .num { min-height: max(44px, 2.75rem); }
+  .check input { width: 1.4rem; height: 1.4rem; }
+  .row > .icon:first-child, .side > .icon, .tile-head .icon { margin-top: -.6rem; }
+}
 </style>
 </head>
-<body>
-<div class="wrap">
-  <header class="top">
-    <h1>Aion 2 — трекер <small>Global EU</small></h1>
-    <div class="chips">
-      <span class="chip"><span class="k" id="local-label">Твоё время</span><b id="clk-local"></b></span>
-      <span class="chip"><span class="k">Берлин</span><b id="clk-berlin"></b></span>
-      <span class="chip"><span class="k">UTC</span><b id="clk-utc"></b></span>
-      <span class="chip"><span class="k">Ежедневный сброс</span><b id="rst-daily"></b></span>
-      <span class="chip"><span class="k">Еженедельный сброс</span><b id="rst-weekly"></b></span>
+<body data-tab="now">
+<header class="appbar">
+  <div class="appbar-in">
+    <h1 class="brand">Aion 2 — помощник <small>Global EU</small></h1>
+    <div class="clock" id="clock">
+      <b class="clk" id="clk-local"></b>
+      <span>сброс через <b id="rst-daily"></b></span>
+      <span id="clk-server" hidden>сервер <b id="clk-berlin"></b></span>
     </div>
-  </header>
+    <div class="actions">
+      <div class="ov" id="overlay-chip"></div>
+      <div class="menu-wrap">
+        <button type="button" class="tbtn" data-act="maps-menu" aria-expanded="false" aria-controls="maps-menu" aria-label="Карты metabot" title="Карты metabot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z"/><path d="M8 2v16M16 6v16"/></svg>
+          <span class="tbtn-l">Карты</span>
+        </button>
+        <div class="menu" id="maps-menu" hidden>
+          <div class="k">Карты metabot</div>
+          <a href="https://metabot.gg/ru_RU/aion-2/map/altgard" target="_blank" rel="noopener">Альтгард</a>
+          <a href="https://metabot.gg/ru_RU/aion-2/map/altgard/rifts" target="_blank" rel="noopener">Альтгард · порталы</a>
+          <a href="https://metabot.gg/ru_RU/aion-2/map/altgard/field-bosses" target="_blank" rel="noopener">Альтгард · боссы</a>
+          <a href="https://metabot.gg/ru_RU/aion-2/map/altgard/field-events" target="_blank" rel="noopener">Альтгард · события</a>
+          <a href="https://metabot.gg/ru_RU/aion-2/map/chaotic-lower-reshanta" target="_blank" rel="noopener">Нижний уровень Арэшурата хаоса</a>
+          <a href="https://metabot.gg/ru_RU/aion-2/map/verteron" target="_blank" rel="noopener">Бертрон</a>
+          <a href="https://metabot.gg/ru_RU/aion-2/map/morheim" target="_blank" rel="noopener">Морхейм</a>
+        </div>
+      </div>
+      <button type="button" class="tbtn" data-act="settings-open" aria-haspopup="dialog" aria-label="Настройки" title="Настройки">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>
+        <span class="tbtn-l">Настройки</span>
+      </button>
+    </div>
+  </div>
+</header>
 
+<main class="wrap">
   <div class="banner" id="banner" hidden>Хранилище браузера недоступно — галочки и счётчики не сохранятся после перезагрузки.</div>
 
-  <div class="alertbar">
-    <span id="alert-status"></span>
-    <span id="overlay-actions"></span>
-    <button class="btn" data-act="test">Проверить алерт</button>
-    <button class="btn" data-act="test-delayed">Тест через 15 сек</button>
-    <button class="btn" data-act="overlay-quit">Выключить плашку</button>
-  </div>
+  <section class="card now" data-pane="now" aria-labelledby="now-h">
+    <div class="now-head"><h2 id="now-h">Сейчас и дальше</h2><span class="hint" aria-hidden="true"><span class="hint-mouse">наведи на шкалу — покажет ивент и время</span><span class="hint-touch">нажми на шкалу — покажет ивент и время</span></span></div>
+    <div class="tl" aria-hidden="true"><div class="tl-ruler" id="tl-ruler"></div><div class="tl-lanes" id="tl-lanes"></div><div class="tl-track" id="tl-track"></div><div class="tl-hours" id="tl-hours"></div></div>
+    <div class="upnext" id="upnext"></div>
+    <div class="hourly" id="hourly"></div>
+  </section>
 
-  <nav class="maps">
-    <span class="k">Карты metabot:</span>
-    <a class="btn" href="https://metabot.gg/ru_RU/aion-2/map/altgard" target="_blank" rel="noopener">Альтгард</a>
-    <a class="btn" href="https://metabot.gg/ru_RU/aion-2/map/altgard/rifts" target="_blank" rel="noopener">Альтгард · порталы</a>
-    <a class="btn" href="https://metabot.gg/ru_RU/aion-2/map/altgard/field-bosses" target="_blank" rel="noopener">Альтгард · боссы</a>
-    <a class="btn" href="https://metabot.gg/ru_RU/aion-2/map/altgard/field-events" target="_blank" rel="noopener">Альтгард · события</a>
-    <a class="btn" href="https://metabot.gg/ru_RU/aion-2/map/chaotic-lower-reshanta" target="_blank" rel="noopener">Нижний уровень Арэшурата хаоса</a>
-    <a class="btn" href="https://metabot.gg/ru_RU/aion-2/map/verteron" target="_blank" rel="noopener">Бертрон</a>
-    <a class="btn" href="https://metabot.gg/ru_RU/aion-2/map/morheim" target="_blank" rel="noopener">Морхейм</a>
-  </nav>
-
-  <details class="card settings">
-    <summary>Настройки</summary>
-    <div class="settings-body">
-      <label class="opt"><input type="checkbox" data-setting="member"> Премиум подписка Квайринг <span class="note">максимум Эфирной энергии 840, ключей Фестиваля шиго 21</span></label>
-      <fieldset>
-        <legend>Расписание ивентов после 25.10 (Европа переходит на зимнее время)</legend>
-        <label class="opt"><input type="radio" name="dst" value="berlin" data-setting="dstMode"> Держать берлинские часы — разломы остаются в 02:00, 05:00 … 23:00 по Берлину</label>
-        <label class="opt"><input type="radio" name="dst" value="utc" data-setting="dstMode"> Привязка к UTC — по Берлину ивенты сдвигаются на час раньше, как сбросы</label>
-        <div class="note">До 25.10 оба режима совпадают. После перевода часов сверь в игре первый разлом и выбери режим, который совпал. Ресеты всегда в 07:00 UTC.</div>
-      </fieldset>
-      <div class="opt">Напоминания об ивентах: <span id="leads-list"></span>
-        <input type="number" min="0" max="240" id="lead-new" placeholder="мин"> <button class="btn" data-act="lead-add">Добавить</button></div>
-      <div class="note">Для всех ивентов с включённым 🔔. 0 — в момент начала.</div>
-      <div class="opt">Напоминания о капах: <span id="warns-list"></span>
-        <input type="number" min="0" max="168" id="warn-new" placeholder="ч"> <button class="btn" data-act="warn-add">Добавить</button></div>
-      <div class="note">Для всех счётчиков с включённым 🔔. 0 — когда счётчик упёрся в максимум.</div>
-      <label class="opt">Плашка висит <input type="number" min="3" max="60" data-setting="bannerSec"> сек</label>
-      <div class="opt">Горячая клавиша «что дальше»: <b id="hotkey-label">—</b>
-        <button class="btn" data-act="hotkey-change" id="hotkey-btn">Изменить</button> <span class="note" id="hotkey-status"></span></div>
-      <label class="opt"><input type="checkbox" data-setting="showHidden"> Показывать скрытые пункты</label>
-      <div class="opt" id="uninstall-row" hidden><button class="btn" data-act="overlay-uninstall">Удалить плашку с компьютера</button> <span class="note">трекер на сайте останется</span></div>
+  <div class="layout">
+    <div class="col">
+      <section class="card pane-ev" data-pane="now" aria-labelledby="h-ev">
+        <h2><span id="h-ev">Ивенты</span><span class="h2-meta"><span id="events-tz"></span> · <span class="approx">≈</span>время не подтверждено</span></h2>
+        <div id="events"></div>
+      </section>
+      <section class="card pane-res" data-pane="res" aria-labelledby="h-res">
+        <h2><span id="h-res">Счётчики</span><span class="h2-meta">нажми на число, чтобы вписать из игры</span></h2>
+        <div class="tiles" id="resources"></div>
+      </section>
     </div>
-  </details>
-  <div class="grid">
-    <section class="card">
-      <h2>Ивенты <span id="events-tz"></span></h2>
-      <div id="events"></div>
-    </section>
-
-    <section class="card">
-      <h2>Ежедневное <span>сделано <b id="daily-progress"></b> · сброс через <b id="daily-left"></b></span></h2>
-      <div id="daily-list"></div>
-      <h2>Еженедельное <span>сделано <b id="weekly-progress"></b> · сброс через <b id="weekly-left"></b></span></h2>
-      <div id="weekly-list"></div>
-    </section>
-
-    <section class="card">
-      <h2>Счётчики и капы <span>вводи значения из игры</span></h2>
-      <div id="resources"></div>
-    </section>
+    <div class="col">
+      <section class="card pane-day" data-pane="today" aria-labelledby="h-day">
+        <h2><span id="h-day">Сегодня</span><span class="h2-meta">сделано <b id="daily-progress"></b> · сброс через <b id="daily-left"></b></span></h2>
+        <div class="progress"><i id="daily-bar"></i></div>
+        <div id="daily-list"></div>
+      </section>
+      <section class="card pane-week" data-pane="week" aria-labelledby="h-week">
+        <h2><span id="h-week">Неделя</span><span class="h2-meta">сделано <b id="weekly-progress"></b> · сброс через <b id="weekly-left"></b></span></h2>
+        <div class="progress"><i id="weekly-bar"></i></div>
+        <div id="weekly-list"></div>
+      </section>
+    </div>
   </div>
 
   <footer>
-    <p><b>Плашка поверх игры и горячая клавиша</b> работают через маленькую программу на компьютере: кнопка «Скачать плашку» вверху страницы, один раз запустить скачанный файл. Подробнее: <a href="https://github.com/Vanya-ID/aion2-helper#readme" target="_blank" rel="noopener">github.com/Vanya-ID/aion2-helper</a>.</p>
-    Данные на 10.10.2026. NCSOFT не публиковала расписание Global — времена собраны игроками. Если страница расходится с игрой, верь таймеру сброса в подсказке счётчика в клиенте; после патча правь блок данных в начале скрипта.
+    <p><b>Плашка поверх игры и горячая клавиша</b> работают через маленькую программу для Windows: Настройки → «Плашка поверх игры» → «Скачать», один раз запустить скачанный файл. Подробнее: <a href="https://github.com/Vanya-ID/aion2-helper#readme" target="_blank" rel="noopener">github.com/Vanya-ID/aion2-helper</a>.</p>
+    <p>Данные на 10.10.2026. NCSOFT не публиковала расписание Global — времена собраны игроками. Если страница расходится с игрой, верь таймеру сброса в подсказке счётчика в клиенте; после патча правь блок данных в начале скрипта.</p>
     <ul>
       <li><a href="https://daevaguides.com/en/guides/timers/index.html">daevaguides.com — таймеры EU</a> (6 окт)</li>
       <li><a href="https://shugo.gg/timers">shugo.gg — таймеры</a> (9 окт)</li>
@@ -189,9 +393,81 @@ footer ul { margin: 4px 0 0; padding-left: 18px; }
       <li><a href="https://endgametools.com/en/aion-2/timers">endgametools.com — еженедельные техработы</a></li>
     </ul>
   </footer>
-</div>
-<div id="toast"></div>
-<div id="card"></div>
+</main>
+
+<nav class="tabbar" aria-label="Разделы">
+  <button type="button" data-act="tab" data-tab="now">Сейчас</button>
+  <button type="button" data-act="tab" data-tab="today">Сегодня <span class="badge" id="tab-daily"></span></button>
+  <button type="button" data-act="tab" data-tab="week">Неделя <span class="badge" id="tab-weekly"></span></button>
+  <button type="button" data-act="tab" data-tab="res">Счётчики</button>
+</nav>
+
+<div class="scrim" id="scrim" data-act="settings-close" hidden></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title" hidden>
+  <div class="drawer-head">
+    <h2 id="drawer-title">Настройки</h2>
+    <button type="button" class="tbtn" data-act="settings-close" aria-label="Закрыть настройки" title="Закрыть">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="drawer-body">
+    <section class="set" aria-labelledby="set-rem">
+      <h3 id="set-rem">Напоминания</h3>
+      <div class="field">
+        <span>Об ивентах с включённым колокольчиком</span>
+        <div class="pills" id="leads-list"></div>
+        <div class="opt"><input class="num" type="number" min="0" max="240" id="lead-new" placeholder="мин" aria-label="За сколько минут до начала" data-enter="lead-add"><button type="button" class="btn" data-act="lead-add">Добавить</button></div>
+        <p class="note">0 — в момент начала.</p>
+      </div>
+      <div class="field">
+        <span>О капах счётчиков с включённым колокольчиком</span>
+        <div class="pills" id="warns-list"></div>
+        <div class="opt"><input class="num" type="number" min="0" max="168" id="warn-new" placeholder="ч" aria-label="За сколько часов до капа" data-enter="warn-add"><button type="button" class="btn" data-act="warn-add">Добавить</button></div>
+        <p class="note">0 — когда счётчик упёрся в максимум.</p>
+      </div>
+      <label class="opt">Плашка висит <input class="num" type="number" min="3" max="60" data-setting="bannerSec"> сек</label>
+    </section>
+
+    <section class="set" aria-labelledby="set-overlay">
+      <h3 id="set-overlay" tabindex="-1">Плашка поверх игры</h3>
+      <p class="ov-line"><span class="dot" id="ov-dot"></span><span id="alert-status"></span></p>
+      <div class="opt" id="overlay-actions"></div>
+      <div class="opt"><button type="button" class="btn" data-act="test">Проверить алерт</button><button type="button" class="btn" data-act="test-delayed">Тест через 15 сек</button></div>
+      <div class="field">
+        <span>Горячая клавиша «что дальше»</span>
+        <div class="opt"><b id="hotkey-label">—</b><button type="button" class="btn" data-act="hotkey-change" id="hotkey-btn">Изменить</button></div>
+        <p class="note" id="hotkey-status"></p>
+      </div>
+      <div class="opt"><button type="button" class="btn" data-act="overlay-quit" id="overlay-quit">Выключить плашку</button><button type="button" class="btn btn-danger" data-act="overlay-uninstall" id="uninstall-btn">Удалить с компьютера</button></div>
+      <p class="note">Маленькая программа для Windows: показывает напоминания поверх игры и окно «что дальше» по горячей клавише. Трекер на сайте работает и без неё. <a href="https://github.com/Vanya-ID/aion2-helper#readme" target="_blank" rel="noopener">Подробнее</a></p>
+    </section>
+
+    <section class="set" aria-labelledby="set-sched">
+      <h3 id="set-sched">Расписание</h3>
+      <fieldset>
+        <legend>После 25.10 (Европа переходит на зимнее время)</legend>
+        <label class="opt top"><input type="radio" name="dst" value="berlin" data-setting="dstMode"> <span>Держать берлинские часы — разломы остаются в 02:00, 05:00 … 23:00 по Берлину</span></label>
+        <label class="opt top"><input type="radio" name="dst" value="utc" data-setting="dstMode"> <span>Привязка к UTC — по Берлину ивенты сдвигаются на час раньше, как сбросы</span></label>
+        <p class="note">До 25.10 оба режима совпадают. После перевода часов сверь в игре первый разлом и выбери режим, который совпал. Ресеты всегда в 07:00 UTC.</p>
+      </fieldset>
+      <label class="opt top"><input type="checkbox" data-setting="showServer"> <span>Показывать серверное время (Берлин) в верхней панели</span></label>
+    </section>
+
+    <section class="set" aria-labelledby="set-sub">
+      <h3 id="set-sub">Подписка</h3>
+      <label class="opt top"><input type="checkbox" data-setting="member"> <span>Премиум подписка Квайринг <span class="note">— максимум Эфирной энергии 840, ключей Фестиваля шиго 21</span></span></label>
+    </section>
+
+    <section class="set" aria-labelledby="set-hidden">
+      <h3 id="set-hidden" tabindex="-1">Скрытые пункты</h3>
+      <div id="hidden-list"></div>
+    </section>
+  </div>
+</aside>
+
+<div id="toast" role="status" aria-live="polite"><span id="toast-text"></span><span id="toast-act"></span><button type="button" class="icon" data-act="toast-close" aria-label="Закрыть уведомление"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+<div id="card" role="tooltip"></div>
+<div id="tip" hidden></div>
 
 <script>
 const RESET_UTC_HOUR = 7;
@@ -620,9 +896,7 @@ const OVERLAY_EXE_URL = 'https://github.com/Vanya-ID/aion2-helper/releases/lates
 const RELEASES_API = 'https://api.github.com/repos/Vanya-ID/aion2-helper/releases/latest';
 const LOCAL_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-const fmtClock = new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-const fmtBerlin = new Intl.DateTimeFormat('ru-RU', { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-const fmtUtc = new Intl.DateTimeFormat('ru-RU', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+const fmtBerlin = new Intl.DateTimeFormat('ru-RU', { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit' });
 const fmtTime = new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' });
 const fmtDayTime = new Intl.DateTimeFormat('ru-RU', { weekday: 'short', hour: '2-digit', minute: '2-digit' });
 
@@ -657,11 +931,12 @@ function load() {
     storageOk = false;
     console.error(e);
   }
-  const settings = { member: false, dstMode: 'berlin', leads: [5], warnHs: [6, 0], bannerSec: 10, showHidden: false, ...saved.settings };
+  const settings = { member: false, dstMode: 'berlin', leads: [5], warnHs: [6, 0], bannerSec: 10, showServer: false, ...saved.settings };
   if (settings.lead !== undefined && !(saved.settings || {}).leads) settings.leads = [settings.lead];
   if (settings.warnH !== undefined && !(saved.settings || {}).warnHs) settings.warnHs = [settings.warnH, 0];
   delete settings.lead;
   delete settings.warnH;
+  delete settings.showHidden;
   return {
     settings,
     hidden: saved.hidden || {},
@@ -804,12 +1079,111 @@ function txt(v) {
   return typeof v === 'function' ? v(state.settings) : v;
 }
 
+const ZONES = { 'Альтгард': 'altgard', 'Бездна': 'abyss', 'Поле боя': 'arena', 'Сервер': 'server' };
+const KINDS = {
+  event: { items: EVENTS, label: 'ивент' },
+  daily: { items: DAILY, label: 'сегодня' },
+  weekly: { items: WEEKLY, label: 'неделя' },
+  res: { items: RESOURCES, label: 'счётчик' },
+};
+const TABS = ['now', 'today', 'week', 'res'];
+const TAB_KEY = 'aion2-tracker-tab';
+const APPROX = '<span class="approx" title="Время не подтверждено в игре">≈</span>';
+const ICON = {
+  bell: svg('<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>'),
+  x: svg('<path d="M18 6 6 18M6 6l12 12"/>'),
+};
+const ACTIONS = {
+  test: () => fire('Проверка плашки', 'Плашка работает'),
+  'test-delayed': btn => {
+    btn.disabled = true;
+    btn.textContent = 'Ждём 15 сек…';
+    setTimeout(() => {
+      fire('Проверка плашки', 'Сработало через 15 секунд');
+      btn.disabled = false;
+      btn.textContent = 'Тест через 15 сек';
+    }, 15000);
+  },
+  spend: btn => spend(btn.dataset.id, Number(btn.dataset.n)),
+  edit: openEditor,
+  bell: btn => {
+    toggle(state.alerts, btn.dataset.key);
+    save();
+    const on = !!state.alerts[btn.dataset.key];
+    for (const b of document.querySelectorAll(`[data-act=bell][data-key="${btn.dataset.key}"]`)) {
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on);
+      b.title = on ? 'Напоминание включено' : 'Напоминание выключено';
+    }
+  },
+  hide: btn => {
+    setHidden(btn.dataset.key, true);
+    showToast(`Скрыто: ${itemByKey(btn.dataset.key).name}`, `<button type="button" class="btn btn-sm" data-act="unhide" data-key="${btn.dataset.key}">Вернуть</button>`);
+  },
+  unhide: btn => {
+    const inDrawer = !!btn.closest('#drawer');
+    if (btn.closest('#toast')) hideToast();
+    setHidden(btn.dataset.key, false);
+    if (inDrawer) document.getElementById('set-hidden').focus();
+  },
+  'hotkey-change': startHotkeyCapture,
+  'overlay-update': () => {
+    fetch(OVERLAY + '/update', { method: 'POST' })
+      .catch(() => {})
+      .then(() => [1000, 8000, 20000].forEach(ms => setTimeout(pingOverlay, ms)));
+  },
+  'overlay-uninstall': () => {
+    if (!confirm('Удалить плашку с компьютера? Трекер на сайте останется.')) return;
+    fetch(OVERLAY + '/uninstall', { method: 'POST' })
+      .catch(() => {})
+      .then(() => setTimeout(pingOverlay, 3000));
+  },
+  'overlay-quit': () => {
+    fetch(OVERLAY + '/quit', { method: 'POST' })
+      .catch(() => {})
+      .then(() => setTimeout(pingOverlay, 500));
+  },
+  'lead-add': () => addReminder('leads', 'lead-new', 240),
+  'warn-add': () => addReminder('warnHs', 'warn-new', 168),
+  'lead-del': btn => editReminders('leads', null, Number(btn.dataset.v), false),
+  'warn-del': btn => editReminders('warnHs', null, Number(btn.dataset.v), false),
+  'settings-open': btn => openDrawer(btn.dataset.focus),
+  'settings-close': closeDrawer,
+  'maps-menu': (btn, e) => setMenu(document.getElementById('maps-menu').hidden, e.detail === 0),
+  tab: btn => setTab(btn.dataset.tab, true),
+  'toast-close': hideToast,
+};
+let eventOrder = '';
+let timelineMinute = -1;
+let upKey = '';
+let launchAt = 0;
+let drawerReturn = null;
+
+function svg(body) {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
+}
+
 function isHidden(kind, id) {
   return !!state.hidden[`${kind}:${id}`];
 }
 
-function visible(kind, id) {
-  return state.settings.showHidden || !isHidden(kind, id);
+function isHourly(ev) {
+  return ev.times.length >= 24;
+}
+
+function zoneOf(ev) {
+  return ZONES[ev.zone] || 'server';
+}
+
+function itemByKey(key) {
+  const [kind, id] = key.split(':');
+  return KINDS[kind] && KINDS[kind].items.find(x => x.id === id);
+}
+
+function setHtml(el, html) {
+  if (el._html === html) return;
+  el._html = html;
+  el.innerHTML = html;
 }
 
 function dur(ms) {
@@ -830,12 +1204,16 @@ function infoKey(item) {
   return item.info || item.id;
 }
 
+function termHtml(key, text) {
+  return `<span class="term" role="button" tabindex="0" aria-describedby="card" data-term="${key}">${text}</span>`;
+}
+
 function termName(item, used) {
   const key = infoKey(item);
-  const tag = item.nameUnverified ? '<span class="tag unconf">название не проверено</span>' : '';
+  const tag = item.nameUnverified ? '<span class="tag">название не проверено</span>' : '';
   if (!INFO[key]) return item.name + tag;
   used.add(key);
-  return `<span class="term" data-term="${key}">${item.name}</span>${tag}`;
+  return termHtml(key, item.name) + tag;
 }
 
 function linkify(text, used) {
@@ -850,7 +1228,7 @@ function linkify(text, used) {
   let pos = 0;
   for (const h of hits) {
     if (h.start < pos) continue;
-    out += `${text.slice(pos, h.start)}<span class="term" data-term="${h.key}">${text.slice(h.start, h.end)}</span>`;
+    out += text.slice(pos, h.start) + termHtml(h.key, text.slice(h.start, h.end));
     pos = h.end;
     used.add(h.key);
   }
@@ -881,92 +1259,139 @@ function cardHtml(entry) {
   return `<div class="card-head">${img}<h3>${entry.title}</h3></div>${infoHtml(entry)}`;
 }
 
-function bell(kind, id) {
-  const on = state.alerts[`${kind}:${id}`];
-  return `<button class="icon bell ${on ? 'on' : ''}" data-act="bell" data-key="${kind}:${id}" title="${on ? 'Алерт включён' : 'Алерт выключен'}">🔔</button>`;
+function bell(kind, item) {
+  const key = `${kind}:${item.id}`;
+  const on = !!state.alerts[key];
+  return `<button type="button" class="icon bell${on ? ' on' : ''}" data-act="bell" data-key="${key}" aria-pressed="${on}" aria-label="Напоминание: ${item.name}" title="${on ? 'Напоминание включено' : 'Напоминание выключено'}">${ICON.bell}</button>`;
 }
 
-function hideBtn(kind, id) {
-  const hidden = isHidden(kind, id);
-  return `<button class="icon" data-act="hide" data-key="${kind}:${id}" title="${hidden ? 'Вернуть' : 'Скрыть'}">${hidden ? '↺' : '✕'}</button>`;
+function hideBtn(kind, item) {
+  return `<button type="button" class="icon" data-act="hide" data-key="${kind}:${item.id}" aria-label="Скрыть: ${item.name}" title="Скрыть">${ICON.x}</button>`;
+}
+
+function emptyHidden(text) {
+  return `<p class="empty">${text} <button type="button" class="link" data-act="settings-open" data-focus="set-hidden">Вернуть в настройках</button></p>`;
 }
 
 function renderEvents() {
-  document.getElementById('events').innerHTML = EVENTS.filter(ev => visible('event', ev.id)).map(ev => {
+  document.getElementById('events').innerHTML = EVENTS.filter(ev => !isHidden('event', ev.id)).map(ev => {
     const used = new Set();
     return `
-    <div class="row ${isHidden('event', ev.id) ? 'is-hidden' : ''}" id="ev-${ev.id}">
-      ${bell('event', ev.id)}
+    <div class="row" id="ev-${ev.id}">
+      ${bell('event', ev)}
       <div>
-        <div class="name">${termName(ev, used)}<span class="tag">${ev.zone}</span>${ev.unconfirmed ? '<span class="tag unconf">время не подтверждено</span>' : ''}</div>
-        <div class="note">${linkify(ev.note, used)}</div>
+        <div class="name">${termName(ev, used)}</div>
+        <div class="note"><span class="zone z-${zoneOf(ev)}">${ev.zone}</span> · ${linkify(ev.note, used)}</div>
       </div>
       <div class="side">
-        <div class="when"><div class="big" data-f="main"></div><div class="sub" data-f="next"></div></div>
-        ${hideBtn('event', ev.id)}
+        <div class="when"><div class="big">${ev.unconfirmed ? APPROX : ''}<span data-f="main"></span></div><div class="sub" data-f="next"></div></div>
+        ${hideBtn('event', ev)}
       </div>
     </div>`;
-  }).join('');
+  }).join('') || emptyHidden('Все ивенты скрыты.');
+  eventOrder = '';
+}
+
+function renderHourly() {
+  const list = EVENTS.filter(ev => isHourly(ev) && !isHidden('event', ev.id));
+  const el = document.getElementById('hourly');
+  el.hidden = !list.length;
+  el.innerHTML = list.length ? `<span class="k">Каждый час</span>${list.map(ev => `
+    <span class="hr">${bell('event', ev)}<b>:${String(ev.times[0][1]).padStart(2, '0')}</b> ${termName(ev, new Set())} <span class="hr-t" id="hr-${ev.id}"></span></span>`).join('')}` : '';
+}
+
+function checkRow(kind, it, isDone) {
+  const used = new Set();
+  const id = `chk-${kind}-${it.id}`;
+  return `
+    <div class="row check${isDone ? ' done' : ''}">
+      <input type="checkbox" id="${id}" data-check="${kind}:${it.id}" aria-labelledby="${id}-n"${isDone ? ' checked' : ''}>
+      <div class="main" data-for="${id}">
+        <div class="name" id="${id}-n">${termName(it, used)}</div>
+        <div class="note">${linkify(txt(it.note), used)}</div>
+      </div>
+      ${hideBtn(kind, it)}
+    </div>`;
 }
 
 function renderList(kind, items, t) {
   const done = periodDone(kind, t);
-  const active = items.filter(it => !it.until || t < it.until);
-  const counted = active.filter(it => !isHidden(kind, it.id));
-  document.getElementById(`${kind}-progress`).textContent = `${counted.filter(it => done[it.id]).length}/${counted.length}`;
-  document.getElementById(`${kind}-list`).innerHTML = active.filter(it => visible(kind, it.id)).map(it => {
-    const used = new Set();
-    return `
-    <div class="row check ${isHidden(kind, it.id) ? 'is-hidden' : ''} ${done[it.id] ? 'done' : ''}">
-      <input type="checkbox" id="chk-${kind}-${it.id}" data-check="${kind}:${it.id}" ${done[it.id] ? 'checked' : ''}>
-      <label for="chk-${kind}-${it.id}"><div class="name">${termName(it, used)}</div><div class="note">${linkify(txt(it.note), used)}</div></label>
-      ${hideBtn(kind, it.id)}
-    </div>`;
-  }).join('');
+  const active = items.filter(it => (!it.until || t < it.until) && !isHidden(kind, it.id));
+  const todo = active.filter(it => !done[it.id]);
+  const finished = active.filter(it => done[it.id]);
+  document.getElementById(`${kind}-progress`).textContent = `${finished.length}/${active.length}`;
+  document.getElementById(`${kind}-bar`).style.width = active.length ? `${(finished.length / active.length) * 100}%` : '0';
+  document.getElementById(`tab-${kind}`).textContent = todo.length || '';
+  let head = '';
+  if (!active.length) head = emptyHidden('Все пункты скрыты.');
+  else if (!todo.length) head = '<p class="empty">Всё сделано — новые задания после сброса.</p>';
+  document.getElementById(`${kind}-list`).innerHTML = head
+    + todo.map(it => checkRow(kind, it, false)).join('')
+    + finished.map(it => checkRow(kind, it, true)).join('');
 }
 
 function renderResources() {
-  document.getElementById('resources').innerHTML = RESOURCES.filter(r => visible('res', r.id)).map(r => {
+  document.getElementById('resources').innerHTML = RESOURCES.filter(r => !isHidden('res', r.id)).map(r => {
     const used = new Set();
     return `
-    <div class="row ${isHidden('res', r.id) ? 'is-hidden' : ''}" id="res-${r.id}">
-      ${bell('res', r.id)}
-      <div>
+    <div class="tile" id="res-${r.id}">
+      <div class="tile-head">
         <div class="name">${termName(r, used)}</div>
-        <div class="note">${linkify(r.note, used)}</div>
-        <div class="meter"><i data-f="meter"></i></div>
-        <div class="inputs">
-          <label>сейчас <input type="number" min="0" inputmode="numeric" data-res="${r.id}" data-field="value" placeholder="—"></label>
-          <span>${(r.spend || [1]).map(n => `<button class="btn btn-sm" data-act="spend" data-id="${r.id}" data-n="${n}" title="Потратил ${n}">−${n}</button>`).join(' ')}</span>
-          ${r.everyH ? `<label>следующий +${r.gain} через <input type="number" min="0" max="${r.everyH * 60}" inputmode="numeric" data-res="${r.id}" data-field="tick"> мин</label>` : ''}
-        </div>
+        ${bell('res', r)}${hideBtn('res', r)}
       </div>
-      <div class="side">
-        <div class="when"><div class="big" data-f="val"></div><div class="sub" data-f="full"></div></div>
-        ${hideBtn('res', r.id)}
-      </div>
+      <button type="button" class="val" data-act="edit" data-field="value" aria-label="Вписать значение: ${r.name}"><b data-f="val"></b><span data-f="cap"></span></button>
+      <input class="num val-input" type="number" min="0" inputmode="numeric" data-res="${r.id}" data-field="value" aria-label="${r.name}: сколько сейчас" hidden>
+      <div class="meter"><i data-f="meter"></i></div>
+      <div class="sub" data-f="full"></div>
+      ${r.everyH ? `<div class="sub tick-line"><span data-f="tick"></span><span>·</span><button type="button" class="link" data-act="edit" data-field="tick">изменить</button><input class="num" type="number" min="0" max="${r.everyH * 60}" inputmode="numeric" data-res="${r.id}" data-field="tick" aria-label="${r.name}: минут до следующего +${r.gain}" placeholder="мин" hidden></div>` : ''}
+      <div class="note">${linkify(r.note, used)}</div>
+      <div class="spend">${(r.spend || [1]).map(n => `<button type="button" class="btn" data-act="spend" data-id="${r.id}" data-n="${n}" aria-label="−${n} ${r.name}" title="Потратил ${n}">−${n}</button>`).join('')}</div>
     </div>`;
-  }).join('');
+  }).join('') || emptyHidden('Все счётчики скрыты.');
+}
+
+function renderHidden() {
+  const rows = Object.keys(state.hidden).map(key => {
+    const item = itemByKey(key);
+    return item && `<li><span>${item.name} <span class="note">· ${KINDS[key.split(':')[0]].label}</span></span><button type="button" class="btn btn-sm" data-act="unhide" data-key="${key}">Вернуть</button></li>`;
+  }).filter(Boolean);
+  document.getElementById('hidden-list').innerHTML = rows.length
+    ? `<ul class="hid">${rows.join('')}</ul>`
+    : '<p class="note">Ничего не скрыто. Убрать пункт из списка — кнопка ✕ в его строке.</p>';
+}
+
+function overlayState() {
+  if (location.protocol === 'file:') return ['', 'Плашка не подключена', 'Не подключена — открой трекер с сайта'];
+  if (!overlayInfo) return ['bad', 'Плашка не запущена', 'Не запущена'];
+  if (overlayInfo.updating) return ['wait', 'Плашка обновляется…', 'Обновляется…'];
+  return ['ok', 'Плашка подключена', `Подключена, версия ${overlayInfo.version}`];
 }
 
 function renderAlertStatus() {
   const info = overlayInfo;
-  let text = 'не запущена';
-  if (location.protocol === 'file:') text = 'не подключена — открой трекер с сайта или ярлыком';
-  else if (info && info.updating) text = 'обновляется…';
-  else if (info) text = `подключена, версия ${info.version}`;
-  if (info && info.updateError) text += ` · обновить не удалось: ${info.updateError}`;
-  document.getElementById('alert-status').textContent = `Плашка поверх игры: ${text}`;
+  const [cls, chipText, statusText] = overlayState();
+  const web = location.protocol !== 'file:';
+  const failed = !info && web && launchAt && Date.now() - launchAt >= 8000;
+  const canUpdate = info && info.frozen && latestOverlay && latestOverlay !== info.version && !info.updating;
+  const launch = extra => `<a class="btn ${extra}" href="aion2helper://start" data-launch>Запустить</a>`;
+  const download = extra => `<a class="btn ${extra}" href="${OVERLAY_EXE_URL}">Скачать</a>`;
+  const update = extra => `<button type="button" class="btn btn-accent ${extra}" data-act="overlay-update">Обновить до ${latestOverlay}</button>`;
+  let chipAction = '';
+  if (canUpdate) chipAction = update('btn-sm');
+  else if (!info && web) chipAction = failed ? download('btn-sm btn-primary') : launch('btn-sm btn-primary');
+  setHtml(document.getElementById('overlay-chip'), `<button type="button" class="ov-status" data-act="settings-open" data-focus="set-overlay" title="Плашка поверх игры — настройки"><span class="dot ${cls}"></span>${failed ? 'Не запустилась?' : chipText}</button>${chipAction}`);
+  let status = statusText;
+  if (failed) status += ' · не запустилась — скачай и один раз запусти файл';
+  if (info && info.updateError) status += ` · обновить не удалось: ${info.updateError}`;
+  document.getElementById('ov-dot').className = `dot ${cls}`;
+  document.getElementById('alert-status').textContent = status;
   const actions = [];
-  if (!info && location.protocol !== 'file:') {
-    actions.push('<a class="btn" href="aion2helper://start" data-launch>Запустить плашку</a>');
-    actions.push(`<a class="btn" href="${OVERLAY_EXE_URL}">Скачать плашку</a>`);
-  }
-  if (info && info.frozen && latestOverlay && latestOverlay !== info.version && !info.updating) {
-    actions.push(`<button class="btn btn-accent" data-act="overlay-update">Обновить плашку до ${latestOverlay}</button>`);
-  }
-  document.getElementById('overlay-actions').innerHTML = actions.join(' ');
-  document.getElementById('uninstall-row').hidden = !(info && info.frozen);
+  if (!info && web) actions.push(launch(''), download(''));
+  if (canUpdate) actions.push(update(''));
+  setHtml(document.getElementById('overlay-actions'), actions.join(''));
+  document.getElementById('overlay-quit').hidden = !info;
+  document.getElementById('uninstall-btn').hidden = !(info && info.frozen);
+  document.getElementById('hotkey-btn').disabled = !info && !capturingHotkey;
 }
 
 function pingOverlay() {
@@ -979,7 +1404,10 @@ function pingOverlay() {
     .then(info => {
       const appeared = !overlayInfo;
       overlayInfo = info;
-      if (appeared) loadHotkey();
+      if (appeared) {
+        launchAt = 0;
+        loadHotkey();
+      }
     })
     .catch(() => {
       overlayInfo = null;
@@ -1016,7 +1444,7 @@ function initSettings() {
 }
 
 function renderReminders() {
-  const pill = (act, v, label) => `<span class="pill">${label}<button class="icon" data-act="${act}" data-v="${v}" title="Убрать">✕</button></span>`;
+  const pill = (act, v, label) => `<span class="pill">${label}<button type="button" class="icon" data-act="${act}" data-v="${v}" aria-label="Убрать: ${label}" title="Убрать">${ICON.x}</button></span>`;
   document.getElementById('leads-list').innerHTML = state.settings.leads
     .map(m => pill('lead-del', m, m === 0 ? 'в начале' : `за ${m} мин`)).join('') || '<span class="note">нет</span>';
   document.getElementById('warns-list').innerHTML = state.settings.warnHs
@@ -1032,6 +1460,12 @@ function editReminders(key, inputId, value, add) {
   renderReminders();
 }
 
+function addReminder(key, inputId, max) {
+  const raw = document.getElementById(inputId).value.trim();
+  if (raw === '') return;
+  editReminders(key, inputId, Math.min(max, Math.max(0, Math.round(Number(raw)))), true);
+}
+
 function notifyOnce(key, head, body) {
   if (fired.has(key)) return;
   fired.add(key);
@@ -1043,15 +1477,21 @@ function renderAll() {
   renderedPeriods = periodKey(t);
   hideCard();
   renderEvents();
+  renderHourly();
   renderList('daily', DAILY, t);
   renderList('weekly', WEEKLY, t);
   renderResources();
+  renderHidden();
   renderAlertStatus();
+  document.getElementById('clk-server').hidden = !state.settings.showServer;
+  timelineMinute = -1;
+  upKey = '';
   tick();
   pushSchedule();
 }
 
 function tickEvents(t) {
+  const rows = [];
   for (const ev of EVENTS) {
     const row = document.getElementById(`ev-${ev.id}`);
     if (!row) continue;
@@ -1059,40 +1499,161 @@ function tickEvents(t) {
     const soon = !st.live && st.next - t <= SOON_MIN * MIN;
     row.classList.toggle('live', !!st.live);
     row.classList.toggle('soon', soon);
-    row.querySelector('[data-f=main]').innerHTML = st.live
-      ? `<span class="t-live">ИДЁТ · осталось ${dur(st.liveEnd - t)}</span>`
-      : `<span class="${soon ? 't-soon' : ''}">через ${dur(st.next - t)}</span>`;
-    row.querySelector('[data-f=next]').textContent = st.upcoming.map(s => when(s, t)).join(' · ');
+    setHtml(row.querySelector('[data-f=main]'), st.live
+      ? `<span class="t-live">идёт · ещё ${dur(st.liveEnd - t)}</span>`
+      : `<span class="${soon ? 't-soon' : ''}">через ${dur(st.next - t)}</span>`);
+    setHtml(row.querySelector('[data-f=next]'), st.upcoming.map(s => `<span>${when(s, t)}</span>`).join(''));
+    rows.push([st.live ? st.liveEnd - 1e13 : st.next, row]);
+  }
+  rows.sort((a, b) => a[0] - b[0]);
+  const order = rows.map(([, row]) => row.id).join();
+  if (order === eventOrder) return;
+  eventOrder = order;
+  document.getElementById('events').append(...rows.map(([, row]) => row));
+}
+
+function renderTimeline(t) {
+  const start = t - HOUR;
+  const end = start + DAY;
+  const pos = ms => `${(((ms - start) / DAY) * 100).toFixed(3)}%`;
+  const rows = EVENTS.filter(ev => !isHidden('event', ev.id))
+    .sort((a, b) => isHourly(a) - isHourly(b))
+    .map(ev => ({ ev, occ: occurrences(ev, t).filter(([s, d]) => s + d > start && s < end) }))
+    .filter(row => row.occ.length);
+  const track = document.getElementById('tl-track');
+  const width = track.clientWidth;
+  const marks = [];
+  rows.forEach(({ ev, occ }, lane) => {
+    for (const [s, d] of occ) {
+      const a = Math.max(s, start);
+      const b = Math.min(s + d, end);
+      const px = ((b - a) / DAY) * width;
+      const label = px >= 90 ? `${fmtTime.format(s)}–${fmtTime.format(s + d)}` : px >= 48 ? fmtTime.format(s) : '';
+      marks.push(`<span class="tl-m z-${zoneOf(ev)}${s + d <= t ? ' past' : ''}" data-ev="${ev.id}" data-s="${s}" data-d="${d}" style="left:${pos(a)};width:${pos(start + b - a)};top:calc(5px + ${lane} * (var(--lane) + 3px))">${label ? `<i>${label}</i>` : ''}</span>`);
+    }
+  });
+  const grid = [];
+  const ruler = [`<b class="tl-nowt" style="left:${pos(t)}">${fmtTime.format(t)}</b>`];
+  const hours = [`<span class="now-l" style="left:${pos(t)}">сейчас</span>`];
+  const perHour = width / 24;
+  const step = [1, 2, 3, 6].find(n => perHour * n >= 30) || 6;
+  const first = new Date(start);
+  first.setMinutes(60, 0, 0);
+  for (let x = first.getTime(); x < end; x += HOUR) {
+    const hour = new Date(x).getHours();
+    const major = hour % 3 === 0;
+    const px = ((x - start) / DAY) * width;
+    grid.push(`<i class="tl-grid${major ? ' maj' : ''}" style="left:${pos(x)}"></i>`);
+    ruler.push(`<i${major ? ' class="maj"' : ''} style="left:${pos(x)}"></i>`);
+    if (hour % step === 0 && px > 10 && px < width - 10 && Math.abs(px - perHour) > 34) {
+      ruler.push(`<span${major ? ' class="maj"' : ''} style="left:${pos(x)}">${String(hour).padStart(2, '0')}</span>`);
+    }
+    const share = (x - start) / DAY;
+    if (major && share > 0.1 && share < 0.97) hours.push(`<span${hour % 6 ? ' class="odd"' : ''} style="left:${pos(x)}">${fmtTime.format(x)}</span>`);
+  }
+  track.setAttribute('style', `--lanes:${Math.max(1, rows.length)}`);
+  track.innerHTML = `${grid.join('')}<i class="tl-past"></i>${marks.join('')}<i class="tl-now"></i><i class="tl-cursor" hidden></i>`;
+  document.getElementById('tl-ruler').innerHTML = ruler.join('');
+  document.getElementById('tl-hours').innerHTML = hours.join('');
+  setHtml(document.getElementById('tl-lanes'), rows.map(({ ev }) => `<span class="z-${zoneOf(ev)}" title="${ev.name}">${ev.name}</span>`).join(''));
+}
+
+function showTip(track, x, mark) {
+  const t = Date.now();
+  const r = track.getBoundingClientRect();
+  const tip = document.getElementById('tip');
+  const cursor = track.querySelector('.tl-cursor');
+  if (mark) {
+    const ev = EVENTS.find(v => v.id === mark.dataset.ev);
+    const s = Number(mark.dataset.s);
+    const e = s + Number(mark.dataset.d);
+    const status = e <= t ? 'уже прошёл' : s <= t ? `<span class="t-live">идёт · ещё ${dur(e - t)}</span>` : `через ${dur(s - t)}`;
+    tip.innerHTML = `<b>${ev.name}</b><span>${when(s, t)}–${fmtTime.format(e)} · ${status}</span><span class="m">${ev.zone}${ev.unconfirmed ? ' · ≈ время не подтверждено' : ''}</span>`;
+  } else {
+    const at = Math.round((t - HOUR + ((x - r.left) / r.width) * DAY) / MIN) * MIN;
+    tip.innerHTML = `<b>${when(at, t)}</b><span class="m">${at < t ? 'уже прошло' : `через ${dur(at - t)}`}</span>`;
+  }
+  cursor.hidden = false;
+  cursor.style.left = `${x - r.left}px`;
+  tip.hidden = false;
+  const left = Math.max(8, Math.min(x - tip.offsetWidth / 2, innerWidth - tip.offsetWidth - 8));
+  const above = r.top - tip.offsetHeight - 8;
+  tip.style.left = `${left}px`;
+  tip.style.top = `${above >= 8 ? above : r.bottom + 8}px`;
+}
+
+function hideTip() {
+  const tip = document.getElementById('tip');
+  if (tip.hidden) return;
+  tip.hidden = true;
+  const cursor = document.querySelector('#tl-track .tl-cursor');
+  if (cursor) cursor.hidden = true;
+}
+
+function upTile({ ev, st }, t) {
+  const soon = !st.live && st.next - t <= SOON_MIN * MIN;
+  const cls = st.live ? ' live' : soon ? ' soon' : '';
+  const sub = st.live ? `до ${fmtTime.format(st.liveEnd)}` : `${ev.unconfirmed ? APPROX : ''}${when(st.next, t)}`;
+  return `<div class="un z-${zoneOf(ev)}${cls}"><span class="t"><small>${st.live ? 'идёт · ещё' : 'через'}</small><span data-t="${ev.id}"></span></span><span class="n">${ev.name}</span><span class="s">${sub} · ${ev.zone}</span></div>`;
+}
+
+function tickNow(t) {
+  const minute = Math.floor(t / MIN);
+  if (minute !== timelineMinute) {
+    timelineMinute = minute;
+    renderTimeline(t);
+  }
+  const list = EVENTS.filter(ev => !isHourly(ev) && !isHidden('event', ev.id)).map(ev => ({ ev, st: eventStatus(ev, t) }));
+  const live = list.filter(x => x.st.live).sort((a, b) => a.st.liveEnd - b.st.liveEnd);
+  const next = list.filter(x => !x.st.live).sort((a, b) => a.st.next - b.st.next).slice(0, 3);
+  const items = [...live, ...next];
+  const box = document.getElementById('upnext');
+  const key = items.map(({ ev, st }) => `${ev.id}@${st.live || st.next}@${!st.live && st.next - t <= SOON_MIN * MIN}`).join();
+  if (key !== upKey) {
+    upKey = key;
+    box.innerHTML = items.map(x => upTile(x, t)).join('') || emptyHidden('Все ивенты скрыты.');
+  }
+  for (const { ev, st } of items) {
+    box.querySelector(`[data-t="${ev.id}"]`).textContent = dur((st.live ? st.liveEnd : st.next) - t);
+  }
+  for (const ev of EVENTS) {
+    const el = document.getElementById(`hr-${ev.id}`);
+    if (!el) continue;
+    const st = eventStatus(ev, t);
+    setHtml(el, st.live ? `<span class="t-live">идёт · ещё ${dur(st.liveEnd - t)}</span>` : `через ${dur(st.next - t)}`);
   }
 }
 
 function tickResources(t) {
   for (const r of RESOURCES) {
-    const row = document.getElementById(`res-${r.id}`);
-    if (!row) continue;
+    const tile = document.getElementById(`res-${r.id}`);
+    if (!tile) continue;
     const p = projection(r, t);
-    const val = row.querySelector('[data-f=val]');
-    const sub = row.querySelector('[data-f=full]');
-    const meter = row.querySelector('[data-f=meter]');
-    const input = row.querySelector('[data-field=value]');
-    const tickInput = row.querySelector('[data-field=tick]');
-    row.classList.toggle('capped', !!p && p.full);
+    const val = tile.querySelector('[data-f=val]');
+    const full = tile.querySelector('[data-f=full]');
+    const meter = tile.querySelector('[data-f=meter]');
+    const tickLine = tile.querySelector('.tick-line');
+    tile.classList.toggle('capped', !!p && p.full);
     meter.classList.toggle('full', !!p && p.full);
+    tile.querySelector('[data-f=cap]').textContent = `/ ${p ? p.cap : capOf(r)}`;
+    if (tickLine) tickLine.hidden = !p;
     if (!p) {
-      val.textContent = `— / ${capOf(r)}`;
-      sub.textContent = 'введи текущее значение';
+      val.textContent = '—';
+      full.textContent = 'нажми на «—» и впиши, сколько сейчас в игре';
       meter.style.width = '0';
-      if (tickInput) tickInput.placeholder = '';
       continue;
     }
-    if (document.activeElement !== input) input.value = p.value;
-    val.textContent = `${p.value} / ${p.cap}`;
+    val.textContent = p.value;
     meter.style.width = `${Math.min(100, (p.value / p.cap) * 100)}%`;
-    if (tickInput) tickInput.placeholder = p.full ? '' : String(Math.ceil((p.next - t) / MIN));
-    const approx = r.everyH && state.res[r.id].anchor == null ? '≈ ' : '';
-    sub.innerHTML = p.full
-      ? '<span class="t-warn">НА КАПЕ — прирост сгорает</span>'
-      : `${approx}кап через ${dur(p.fullAt - t)} · ${when(p.fullAt, t)}`;
+    const approx = r.everyH && state.res[r.id].anchor == null;
+    setHtml(full, p.full
+      ? '<span class="t-warn">На капе — прирост сгорает</span>'
+      : `${approx ? '≈ ' : ''}кап через ${dur(p.fullAt - t)} · ${when(p.fullAt, t)}`);
+    if (!tickLine) continue;
+    tickLine.querySelector('[data-f=tick]').textContent = p.full
+      ? `+${r.gain} не копится, пока на капе`
+      : `${approx ? '≈ ' : ''}+${r.gain} через ${Math.ceil((p.next - t) / MIN)} мин`;
+    tickLine.querySelector('[data-act=edit]').textContent = approx ? 'уточнить' : 'изменить';
   }
 }
 
@@ -1133,14 +1694,13 @@ function tick() {
   if (periodKey(t) !== renderedPeriods) return renderAll();
   const nextDaily = lastDailyReset(t) + DAY;
   const nextWeekly = lastWeeklyReset(t) + 7 * DAY;
-  document.getElementById('clk-local').textContent = fmtClock.format(t);
+  document.getElementById('clk-local').textContent = fmtTime.format(t);
   document.getElementById('clk-berlin').textContent = fmtBerlin.format(t);
-  document.getElementById('clk-utc').textContent = fmtUtc.format(t);
-  document.getElementById('rst-daily').textContent = `${dur(nextDaily - t)} · ${when(nextDaily, t)}`;
-  document.getElementById('rst-weekly').textContent = `${dur(nextWeekly - t)} · ${when(nextWeekly, t)}`;
+  document.getElementById('rst-daily').textContent = dur(nextDaily - t);
   document.getElementById('daily-left').textContent = dur(nextDaily - t);
-  document.getElementById('weekly-left').textContent = dur(nextWeekly - t);
+  document.getElementById('weekly-left').textContent = `${dur(nextWeekly - t)} · ${when(nextWeekly, t)}`;
   tickEvents(t);
+  tickNow(t);
   tickResources(t);
   checkEventAlerts(t);
   checkResAlerts(t);
@@ -1152,12 +1712,17 @@ function fire(head, body) {
   showToast(`${head} — ${body}`);
 }
 
-function showToast(text) {
-  const el = document.getElementById('toast');
-  el.textContent = text;
-  el.classList.add('show');
+function showToast(text, action = '') {
+  document.getElementById('toast').classList.add('show');
+  document.getElementById('toast-text').textContent = text;
+  document.getElementById('toast-act').innerHTML = action;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 15000);
+  toastTimer = setTimeout(hideToast, 8000);
+}
+
+function hideToast() {
+  clearTimeout(toastTimer);
+  document.getElementById('toast').classList.remove('show');
 }
 
 function spend(id, n) {
@@ -1168,6 +1733,13 @@ function spend(id, n) {
   state.res[id] = { value: Math.max(0, p.value - n), savedAt: t, anchor: state.res[id].anchor ?? null };
   save();
   tick();
+}
+
+function setHidden(key, hide) {
+  if (hide) state.hidden[key] = true;
+  else delete state.hidden[key];
+  save();
+  renderAll();
 }
 
 const KEY_CODES = {
@@ -1277,14 +1849,26 @@ function onResInput(el) {
   tick();
 }
 
-function showCard(el) {
+function openEditor(btn) {
+  const tile = btn.closest('.tile');
+  const input = tile.querySelector(`input[data-field=${btn.dataset.field}]`);
+  const p = projection(RESOURCES.find(x => x.id === input.dataset.res), Date.now());
+  input.value = btn.dataset.field === 'value' && p ? p.value : '';
+  input.dataset.orig = input.value;
+  btn.hidden = true;
+  input.hidden = false;
+  input.focus();
+  input.select();
+}
+
+function closeEditor(input) {
+  input.hidden = true;
+  input.closest('.tile').querySelector(`[data-act=edit][data-field=${input.dataset.field}]`).hidden = false;
+  if (input.value.trim() !== input.dataset.orig) onResInput(input);
+}
+
+function placeCard(el) {
   const card = document.getElementById('card');
-  clearTimeout(cardTimer);
-  if (cardTerm !== el) {
-    card.innerHTML = cardHtml(INFO[el.dataset.term]);
-    cardTerm = el;
-  }
-  card.classList.add('show');
   const r = el.getBoundingClientRect();
   const left = Math.max(16, Math.min(r.left, innerWidth - card.offsetWidth - 16));
   const below = r.bottom + 6;
@@ -1293,10 +1877,75 @@ function showCard(el) {
   card.style.top = `${top}px`;
 }
 
+function showCard(el) {
+  const card = document.getElementById('card');
+  clearTimeout(cardTimer);
+  if (cardTerm !== el) {
+    card.innerHTML = cardHtml(INFO[el.dataset.term]);
+    cardTerm = el;
+  }
+  card.classList.add('show');
+  placeCard(el);
+}
+
 function hideCard() {
   clearTimeout(cardTimer);
   document.getElementById('card').classList.remove('show');
   cardTerm = null;
+}
+
+function openDrawer(focusId) {
+  const drawer = document.getElementById('drawer');
+  setMenu(false);
+  hideCard();
+  if (drawer.hidden) drawerReturn = document.activeElement;
+  drawer.hidden = false;
+  document.getElementById('scrim').hidden = false;
+  document.body.style.overflow = 'hidden';
+  for (const el of document.querySelectorAll('.appbar, .wrap, .tabbar')) el.inert = true;
+  const target = (focusId && document.getElementById(focusId)) || drawer.querySelector('[data-act=settings-close]');
+  target.focus();
+  if (focusId) target.scrollIntoView({ block: 'start' });
+}
+
+function closeDrawer() {
+  if (capturingHotkey) stopHotkeyCapture('');
+  document.getElementById('drawer').hidden = true;
+  document.getElementById('scrim').hidden = true;
+  document.body.style.overflow = '';
+  for (const el of document.querySelectorAll('.appbar, .wrap, .tabbar')) el.inert = false;
+  const back = drawerReturn && drawerReturn.isConnected ? drawerReturn : document.querySelector('.appbar [data-act=settings-open]');
+  back.focus();
+}
+
+function setMenu(open, focusFirst) {
+  const menu = document.getElementById('maps-menu');
+  if (menu.hidden === !open) return;
+  menu.hidden = !open;
+  document.querySelector('[data-act=maps-menu]').setAttribute('aria-expanded', open);
+  if (open && focusFirst) menu.querySelector('a').focus();
+}
+
+function readTab() {
+  try {
+    return localStorage.getItem(TAB_KEY);
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+function setTab(tab, scroll) {
+  const current = TABS.includes(tab) ? tab : 'now';
+  document.body.dataset.tab = current;
+  timelineMinute = -1;
+  for (const b of document.querySelectorAll('.tabbar [data-tab]')) b.setAttribute('aria-current', b.dataset.tab === current ? 'page' : 'false');
+  try {
+    localStorage.setItem(TAB_KEY, current);
+  } catch (e) {
+    console.error(e);
+  }
+  if (scroll) window.scrollTo(0, 0);
 }
 
 document.addEventListener('pointerdown', e => { lastPointer = e.pointerType; });
@@ -1316,74 +1965,71 @@ document.addEventListener('mouseout', e => {
   }
 });
 
+document.addEventListener('focusin', e => {
+  const term = e.target.closest('.term');
+  if (term && term.matches(':focus-visible')) showCard(term);
+});
+
+document.addEventListener('focusout', e => {
+  if (e.target.closest('.term')) {
+    clearTimeout(cardTimer);
+    cardTimer = setTimeout(hideCard, 200);
+  }
+  if (e.target.matches('input[data-res]') && !e.target.hidden) closeEditor(e.target);
+});
+
+document.addEventListener('mousemove', e => {
+  const track = e.target.closest('#tl-track');
+  if (track) showTip(track, e.clientX, e.target.closest('.tl-m'));
+  else hideTip();
+});
+
+document.addEventListener('scroll', e => {
+  hideTip();
+  if (!cardTerm || (e.target instanceof Element && e.target.closest('#card'))) return;
+  const r = cardTerm.getBoundingClientRect();
+  if (r.bottom < 0 || r.top > innerHeight) hideCard();
+  else placeCard(cardTerm);
+}, { capture: true, passive: true });
+
+window.addEventListener('resize', () => {
+  hideCard();
+  hideTip();
+  timelineMinute = -1;
+});
+
 document.addEventListener('click', e => {
-  if (lastPointer !== 'touch') return;
+  const track = e.target.closest('#tl-track');
+  if (track) {
+    if (lastPointer !== 'mouse') showTip(track, e.clientX, e.target.closest('.tl-m'));
+    return;
+  }
+  if (lastPointer !== 'mouse') hideTip();
   const term = e.target.closest('.term');
   if (term) {
-    e.preventDefault();
-    if (cardTerm === term) hideCard();
-    else showCard(term);
-  } else if (!e.target.closest('#card')) {
-    hideCard();
+    if (lastPointer === 'mouse' || cardTerm !== term) showCard(term);
+    else hideCard();
+    return;
   }
+  if (lastPointer !== 'mouse' && !e.target.closest('#card')) hideCard();
+  if (!e.target.closest('.menu-wrap') || e.target.closest('.menu a')) setMenu(false);
+  if (e.target.closest('[data-launch]')) {
+    launchAt = Date.now();
+    [3000, 8000].forEach(ms => setTimeout(pingOverlay, ms));
+  }
+  const main = e.target.closest('[data-for]');
+  if (main && !e.target.closest('a, button, input')) document.getElementById(main.dataset.for).click();
 });
 
 document.addEventListener('click', e => {
   const btn = e.target.closest('[data-act]');
-  if (!btn) return;
+  if (!btn || !ACTIONS[btn.dataset.act]) return;
   e.preventDefault();
-  const act = btn.dataset.act;
-  if (act === 'test') return fire('Проверка плашки', 'Плашка работает');
-  if (act === 'spend') return spend(btn.dataset.id, Number(btn.dataset.n));
-  if (act === 'hotkey-change') return startHotkeyCapture();
-  if (act === 'overlay-update') {
-    fetch(OVERLAY + '/update', { method: 'POST' })
-      .catch(() => {})
-      .then(() => [1000, 8000, 20000].forEach(ms => setTimeout(pingOverlay, ms)));
-    return;
-  }
-  if (act === 'overlay-uninstall') {
-    if (!confirm('Удалить плашку с компьютера? Трекер на сайте останется.')) return;
-    fetch(OVERLAY + '/uninstall', { method: 'POST' })
-      .catch(() => {})
-      .then(() => setTimeout(pingOverlay, 3000));
-    return;
-  }
-  if (act === 'lead-add' || act === 'warn-add') {
-    const [key, inputId, max] = act === 'lead-add' ? ['leads', 'lead-new', 240] : ['warnHs', 'warn-new', 168];
-    const raw = document.getElementById(inputId).value.trim();
-    if (raw === '') return;
-    editReminders(key, inputId, Math.min(max, Math.max(0, Math.round(Number(raw)))), true);
-    return;
-  }
-  if (act === 'lead-del' || act === 'warn-del') {
-    editReminders(act === 'lead-del' ? 'leads' : 'warnHs', null, Number(btn.dataset.v), false);
-    return;
-  }
-  if (act === 'overlay-quit') {
-    fetch(OVERLAY + '/quit', { method: 'POST' })
-      .catch(() => {})
-      .then(() => setTimeout(pingOverlay, 500));
-    return;
-  }
-  if (act === 'test-delayed') {
-    btn.disabled = true;
-    btn.textContent = 'Ждём 15 сек…';
-    setTimeout(() => {
-      fire('Проверка плашки', 'Сработало через 15 секунд');
-      btn.disabled = false;
-      btn.textContent = 'Тест через 15 сек';
-    }, 15000);
-    return;
-  }
-  toggle(act === 'bell' ? state.alerts : state.hidden, btn.dataset.key);
-  save();
-  renderAll();
+  ACTIONS[btn.dataset.act](btn, e);
 });
 
 document.addEventListener('change', e => {
   const el = e.target;
-  if (el.dataset.res) return onResInput(el);
   if (el.dataset.check) {
     const [kind, id] = el.dataset.check.split(':');
     const done = periodDone(kind, Date.now());
@@ -1397,18 +2043,39 @@ document.addEventListener('change', e => {
   }
   save();
   renderAll();
+  const again = el.id && document.getElementById(el.id);
+  if (again && again !== el && again.offsetParent) again.focus();
+});
+
+document.addEventListener('keydown', e => {
+  const el = e.target;
+  if (el.matches('input[data-res]')) {
+    if (e.key === 'Escape') el.value = el.dataset.orig;
+    if (e.key === 'Enter' || e.key === 'Escape') el.blur();
+    return;
+  }
+  if (e.key === 'Enter' && el.dataset.enter) return ACTIONS[el.dataset.enter]();
+  if ((e.key === 'Enter' || e.key === ' ') && el.classList.contains('term')) {
+    e.preventDefault();
+    return cardTerm === el ? hideCard() : showCard(el);
+  }
+  if (e.key !== 'Escape') return;
+  if (cardTerm) return hideCard();
+  if (!document.getElementById('maps-menu').hidden) {
+    setMenu(false);
+    return document.querySelector('[data-act=maps-menu]').focus();
+  }
+  if (!document.getElementById('drawer').hidden) closeDrawer();
 });
 
 window.addEventListener('focus', () => { document.title = BASE_TITLE; });
 document.addEventListener('keydown', onHotkeyKeydown, true);
-document.addEventListener('click', e => {
-  if (e.target.closest('[data-launch]')) [3000, 8000].forEach(ms => setTimeout(pingOverlay, ms));
-});
 
 const zoneLabel = localZoneLabel(Date.now());
-document.getElementById('local-label').textContent = `Твоё время · ${zoneLabel}`;
+document.getElementById('clock').title = `Твоё время · ${zoneLabel}`;
 document.getElementById('events-tz').textContent = `время: ${zoneLabel}`;
 document.getElementById('banner').hidden = storageOk;
+setTab(readTab(), false);
 initSettings();
 renderAll();
 pingOverlay();
