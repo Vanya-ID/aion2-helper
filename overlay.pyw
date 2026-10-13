@@ -15,7 +15,7 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-VERSION = '1.0.1'
+VERSION = '1.0.2'
 APP = 'Aion2Helper'
 PROTOCOL = 'aion2helper'
 REPO = 'Vanya-ID/aion2-helper'
@@ -149,12 +149,18 @@ def retry(action, attempts=20):
             time.sleep(0.25)
 
 
+def start_installed():
+    env = os.environ.copy()
+    env['PYINSTALLER_RESET_ENVIRONMENT'] = '1'
+    subprocess.Popen([str(INSTALLED_EXE), '--restart'], env=env)
+
+
 def install():
     quit_running_instance()
     data = Path(sys.executable).read_bytes()
     retry(lambda: INSTALLED_EXE.write_bytes(data))
     register()
-    subprocess.Popen([str(INSTALLED_EXE), '--restart'])
+    start_installed()
     if '--silent' in sys.argv:
         return
     webbrowser.open(SITE)
@@ -415,7 +421,7 @@ class Overlay:
             if message == 'restart':
                 self.server.shutdown()
                 self.server.server_close()
-                subprocess.Popen([str(INSTALLED_EXE), '--restart'])
+                start_installed()
                 self.root.destroy()
                 return
             if message == 'next':
