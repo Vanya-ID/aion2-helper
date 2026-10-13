@@ -158,11 +158,6 @@ svg { flex: none; }
 .un.live { background: color-mix(in srgb, var(--live) 9%, var(--panel-2)); border-color: color-mix(in srgb, var(--live) 40%, var(--line)); border-left-color: var(--live); }
 .un.live .t, .un.live .t small { color: var(--live); }
 .un.soon .t { color: var(--soon); }
-.hourly { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s4); color: var(--muted); font-size: var(--fs-sm); }
-.hourly .k { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .06em; }
-.hr { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0 var(--s1); }
-.hr b, .hr .term { color: var(--text); }
-.hr b, .hr-t { font-variant-numeric: tabular-nums; }
 
 .layout { display: grid; gap: var(--s4); align-items: start; }
 .col { display: flex; flex-direction: column; gap: var(--s4); min-width: 0; }
@@ -355,7 +350,6 @@ label.opt { cursor: pointer; }
     <div class="now-head"><h2 id="now-h">Сейчас и дальше</h2><span class="hint" aria-hidden="true"><span class="hint-mouse">наведи на шкалу — покажет ивент и время</span><span class="hint-touch">нажми на шкалу — покажет ивент и время</span></span></div>
     <div class="tl" aria-hidden="true"><div class="tl-ruler" id="tl-ruler"></div><div class="tl-lanes" id="tl-lanes"></div><div class="tl-track" id="tl-track"></div><div class="tl-hours" id="tl-hours"></div></div>
     <div class="upnext" id="upnext"></div>
-    <div class="hourly" id="hourly"></div>
   </section>
 
   <div class="layout">
@@ -1292,14 +1286,6 @@ function renderEvents() {
   eventOrder = '';
 }
 
-function renderHourly() {
-  const list = EVENTS.filter(ev => isHourly(ev) && !isHidden('event', ev.id));
-  const el = document.getElementById('hourly');
-  el.hidden = !list.length;
-  el.innerHTML = list.length ? `<span class="k">Каждый час</span>${list.map(ev => `
-    <span class="hr">${bell('event', ev)}<b>:${String(ev.times[0][1]).padStart(2, '0')}</b> ${termName(ev, new Set())} <span class="hr-t" id="hr-${ev.id}"></span></span>`).join('')}` : '';
-}
-
 function checkRow(kind, it, isDone) {
   const used = new Set();
   const id = `chk-${kind}-${it.id}`;
@@ -1477,7 +1463,6 @@ function renderAll() {
   renderedPeriods = periodKey(t);
   hideCard();
   renderEvents();
-  renderHourly();
   renderList('daily', DAILY, t);
   renderList('weekly', WEEKLY, t);
   renderResources();
@@ -1615,12 +1600,6 @@ function tickNow(t) {
   }
   for (const { ev, st } of items) {
     box.querySelector(`[data-t="${ev.id}"]`).textContent = dur((st.live ? st.liveEnd : st.next) - t);
-  }
-  for (const ev of EVENTS) {
-    const el = document.getElementById(`hr-${ev.id}`);
-    if (!el) continue;
-    const st = eventStatus(ev, t);
-    setHtml(el, st.live ? `<span class="t-live">идёт · ещё ${dur(st.liveEnd - t)}</span>` : `через ${dur(st.next - t)}`);
   }
 }
 
