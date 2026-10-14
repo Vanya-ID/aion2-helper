@@ -116,6 +116,18 @@ svg { flex: none; }
 .now { display: grid; gap: var(--s3); padding: var(--s3) var(--s4) var(--s4); }
 .now-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: var(--s1) var(--s4); }
 .now-head h2 { margin: 0; font-size: var(--fs-lg); }
+.fold { display: inline-flex; align-items: center; gap: var(--s3); padding: 0; background: none; border: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.fold::before { content: ''; flex: none; width: .45rem; height: .45rem; margin: 0 .15rem .2rem; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); transition: transform .15s; }
+.fold:hover::before { border-color: var(--text); }
+.collapsed .fold::before { margin-bottom: 0; transform: rotate(-45deg); }
+@media (min-width: 700px) {
+  .card.collapsed > :not(h2, .now-head) { display: none; }
+  .card.collapsed > h2 { border-bottom: 0; }
+}
+@media (max-width: 699px) {
+  .fold { pointer-events: none; }
+  .fold::before { display: none; }
+}
 .hint { color: var(--muted); font-size: var(--fs-xs); }
 .hint-touch { display: none; }
 @media (hover: none) {
@@ -347,7 +359,7 @@ label.opt { cursor: pointer; }
   <div class="banner" id="banner" hidden>Хранилище браузера недоступно — галочки и счётчики не сохранятся после перезагрузки.</div>
 
   <section class="card now" data-pane="now" aria-labelledby="now-h">
-    <div class="now-head"><h2 id="now-h">Сейчас и дальше</h2><span class="hint" aria-hidden="true"><span class="hint-mouse">наведи на шкалу — покажет ивент и время</span><span class="hint-touch">нажми на шкалу — покажет ивент и время</span></span></div>
+    <div class="now-head"><h2><button type="button" class="fold" data-act="fold" aria-expanded="true" id="now-h">Сейчас и дальше</button></h2><span class="hint" aria-hidden="true"><span class="hint-mouse">наведи на шкалу — покажет ивент и время</span><span class="hint-touch">нажми на шкалу — покажет ивент и время</span></span></div>
     <div class="tl" aria-hidden="true"><div class="tl-ruler" id="tl-ruler"></div><div class="tl-lanes" id="tl-lanes"></div><div class="tl-track" id="tl-track"></div><div class="tl-hours" id="tl-hours"></div></div>
     <div class="upnext" id="upnext"></div>
   </section>
@@ -355,22 +367,22 @@ label.opt { cursor: pointer; }
   <div class="layout">
     <div class="col">
       <section class="card pane-ev" data-pane="now" aria-labelledby="h-ev">
-        <h2><span id="h-ev">Ивенты</span><span class="h2-meta"><span id="events-tz"></span> · <span class="approx">≈</span>время не подтверждено</span></h2>
+        <h2><button type="button" class="fold" data-act="fold" aria-expanded="true" id="h-ev">Ивенты</button><span class="h2-meta"><span id="events-tz"></span> · <span class="approx">≈</span>время не подтверждено</span></h2>
         <div id="events"></div>
       </section>
       <section class="card pane-res" data-pane="res" aria-labelledby="h-res">
-        <h2><span id="h-res">Счётчики</span><span class="h2-meta">нажми на число, чтобы вписать из игры</span></h2>
+        <h2><button type="button" class="fold" data-act="fold" aria-expanded="true" id="h-res">Счётчики</button><span class="h2-meta">нажми на число, чтобы вписать из игры</span></h2>
         <div class="tiles" id="resources"></div>
       </section>
     </div>
     <div class="col">
       <section class="card pane-day" data-pane="today" aria-labelledby="h-day">
-        <h2><span id="h-day">Сегодня</span><span class="h2-meta">сделано <b id="daily-progress"></b> · сброс через <b id="daily-left"></b></span></h2>
+        <h2><button type="button" class="fold" data-act="fold" aria-expanded="true" id="h-day">Сегодня</button><span class="h2-meta">сделано <b id="daily-progress"></b> · сброс через <b id="daily-left"></b></span></h2>
         <div class="progress"><i id="daily-bar"></i></div>
         <div id="daily-list"></div>
       </section>
       <section class="card pane-week" data-pane="week" aria-labelledby="h-week">
-        <h2><span id="h-week">Неделя</span><span class="h2-meta">сделано <b id="weekly-progress"></b> · сброс через <b id="weekly-left"></b></span></h2>
+        <h2><button type="button" class="fold" data-act="fold" aria-expanded="true" id="h-week">Неделя</button><span class="h2-meta">сделано <b id="weekly-progress"></b> · сброс через <b id="weekly-left"></b></span></h2>
         <div class="progress"><i id="weekly-bar"></i></div>
         <div id="weekly-list"></div>
       </section>
@@ -1100,6 +1112,12 @@ const ACTIONS = {
   },
   spend: btn => spend(btn.dataset.id, Number(btn.dataset.n)),
   edit: openEditor,
+  fold: btn => {
+    if (matchMedia('(max-width: 699px)').matches) return;
+    const collapsed = btn.closest('.card').classList.toggle('collapsed');
+    btn.setAttribute('aria-expanded', !collapsed);
+    timelineMinute = -1;
+  },
   bell: btn => {
     toggle(state.alerts, btn.dataset.key);
     save();
