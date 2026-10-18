@@ -440,6 +440,28 @@ label.opt { cursor: pointer; }
       <div class="opt" id="overlay-actions"></div>
       <div class="opt"><button type="button" class="btn" data-act="test">Проверить алерт</button><button type="button" class="btn" data-act="test-delayed">Тест через 15 сек</button></div>
       <div class="field">
+        <span>Вид плашки</span>
+        <div class="opt">
+          <label class="opt">Текст <input class="num" type="number" min="50" max="200" step="10" data-banner="scale"> %</label>
+          <label class="opt">Прозрачность <input class="num" type="number" min="0" max="80" step="5" data-banner="transparency"> %</label>
+        </div>
+        <div class="opt">
+          <label class="opt">Ширина <input class="num" type="number" min="0" max="4000" step="10" data-banner="width"> px</label>
+          <label class="opt">Высота <input class="num" type="number" min="0" max="3000" step="10" data-banner="height"> px</label>
+        </div>
+        <div class="opt">
+          <label class="opt">Отступ сверху <input class="num" type="number" min="0" max="3000" step="10" data-banner="top"> px</label>
+        </div>
+        <div class="opt">
+          <label class="opt"><input type="radio" name="banner-align" value="left" data-banner="align"> слева</label>
+          <label class="opt"><input type="radio" name="banner-align" value="center" data-banner="align"> по центру</label>
+          <label class="opt"><input type="radio" name="banner-align" value="right" data-banner="align"> справа</label>
+          <button type="button" class="btn" data-act="banner-reset">Как было</button>
+        </div>
+        <p class="note">Ширина и высота 0 — по тексту. После изменения плашка на 5 секунд покажет, как она выглядит.</p>
+        <p class="note" id="banner-status"></p>
+      </div>
+      <div class="field">
         <span>Горячая клавиша «что дальше»</span>
         <div class="opt"><b id="hotkey-label">—</b><button type="button" class="btn" data-act="hotkey-change" id="hotkey-btn">Изменить</button></div>
         <p class="note" id="hotkey-status"></p>
@@ -1139,6 +1161,7 @@ const ACTIONS = {
     if (inDrawer) document.getElementById('set-hidden').focus();
   },
   'hotkey-change': startHotkeyCapture,
+  'banner-reset': () => saveBanner(BANNER_DEFAULTS),
   'overlay-update': () => {
     fetch(OVERLAY + '/update', { method: 'POST' })
       .catch(() => {})
@@ -1401,6 +1424,7 @@ function renderAlertStatus() {
 function pingOverlay() {
   if (location.protocol === 'file:') {
     loadHotkey();
+    loadBanner();
     return renderAlertStatus();
   }
   fetch(OVERLAY + '/ping', { cache: 'no-store' })
@@ -1411,6 +1435,7 @@ function pingOverlay() {
       if (appeared) {
         launchAt = 0;
         loadHotkey();
+        loadBanner();
       }
     })
     .catch(() => {
@@ -1773,6 +1798,56 @@ function loadHotkey() {
     .catch(() => setHotkeyStatus('программа-плашка не отвечает'));
 }
 
+const BANNER_DEFAULTS = { scale: 100, width: 0, height: 0, opacity: 94, top: 40, align: 'center' };
+
+function setBannerStatus(text) {
+  document.getElementById('banner-status').textContent = text;
+}
+
+function bannerFailed() {
+  setBannerStatus(overlayInfo ? 'обнови плашку, чтобы настроить её вид' : 'программа-плашка не отвечает');
+}
+
+function renderBanner(b) {
+  for (const el of document.querySelectorAll('[data-banner]')) {
+    const k = el.dataset.banner;
+    if (el.type === 'radio') el.checked = el.value === b.align;
+    else el.value = k === 'transparency' ? 100 - b.opacity : b[k];
+  }
+}
+
+function readBanner() {
+  const b = {};
+  for (const el of document.querySelectorAll('[data-banner]')) {
+    const k = el.dataset.banner;
+    if (el.type === 'radio') {
+      if (el.checked) b.align = el.value;
+    } else if (k === 'transparency') {
+      b.opacity = 100 - (el.value === '' ? 100 - BANNER_DEFAULTS.opacity : Number(el.value));
+    } else {
+      b[k] = el.value === '' ? BANNER_DEFAULTS[k] : Number(el.value);
+    }
+  }
+  return b;
+}
+
+function loadBanner() {
+  if (location.protocol === 'file:') return setBannerStatus('доступно, когда трекер открыт с сайта или ярлыком');
+  fetch(OVERLAY + '/banner', { cache: 'no-store' })
+    .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+    .then(b => { renderBanner(b); setBannerStatus(''); })
+    .catch(bannerFailed);
+}
+
+function saveBanner(b) {
+  if (location.protocol === 'file:') return;
+  setBannerStatus('сохраняю…');
+  fetch(OVERLAY + '/banner', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) })
+    .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+    .then(saved => { renderBanner(saved); setBannerStatus('сохранено'); })
+    .catch(bannerFailed);
+}
+
 function startHotkeyCapture() {
   if (location.protocol === 'file:') return;
   capturingHotkey = true;
@@ -2027,6 +2102,7 @@ document.addEventListener('click', e => {
 
 document.addEventListener('change', e => {
   const el = e.target;
+  if (el.dataset.banner) return saveBanner(readBanner());
   if (el.dataset.check) {
     const [kind, id] = el.dataset.check.split(':');
     const done = periodDone(kind, Date.now());

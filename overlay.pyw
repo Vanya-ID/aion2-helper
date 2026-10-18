@@ -15,7 +15,7 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-VERSION = '1.0.2'
+VERSION = '1.1.0'
 APP = 'Aion2Helper'
 PROTOCOL = 'aion2helper'
 REPO = 'Vanya-ID/aion2-helper'
@@ -25,8 +25,12 @@ PORT = 47123
 LOCAL_URL = f'http://127.0.0.1:{PORT}/'
 ALLOWED_ORIGINS = {f'http://127.0.0.1:{PORT}', 'https://vanya-id.github.io'}
 SHOW_SECONDS = 10
-TOP_OFFSET = 40
 NEXT_COUNT = 3
+PREVIEW_SECONDS = 5
+SIDE_MARGIN = 20
+BANNER_DEFAULTS = {'scale': 100, 'width': 0, 'height': 0, 'opacity': 94, 'top': 40, 'align': 'center'}
+BANNER_LIMITS = {'scale': (50, 200), 'width': (0, 4000), 'height': (0, 3000), 'opacity': (20, 100), 'top': (0, 3000)}
+ALIGNS = ('left', 'center', 'right')
 
 FROZEN = getattr(sys, 'frozen', False)
 HOME = Path(os.environ['LOCALAPPDATA']) / APP if FROZEN else Path(__file__).resolve().parent
@@ -78,6 +82,8 @@ PROTOCOL_KEY = rf'Software\Classes\{PROTOCOL}'
 messages = queue.Queue()
 schedule = {'events': [], 'seconds': SHOW_SECONDS}
 hotkey = {'mods': MOD_CONTROL | MOD_ALT, 'vk': VK_Q, 'label': 'Ctrl+Alt+Q', 'ok': False}
+banner = dict(BANNER_DEFAULTS)
+settings_lock = threading.Lock()
 hotkey_requests = queue.Queue()
 hotkey_results = queue.Queue()
 hotkey_thread = {'id': None}
@@ -247,6 +253,9 @@ class Handler(SimpleHTTPRequestHandler):
         if self.path == '/hotkey':
             self.reply_json({'label': hotkey['label'], 'ok': hotkey['ok']})
             return
+        if self.path == '/banner':
+            self.reply_json(banner)
+            return
         if FROZEN:
             self.send_response(302)
             self.send_header('Location', SITE)
@@ -275,11 +284,22 @@ class Handler(SimpleHTTPRequestHandler):
                 uninstall()
             self.reply(202, b'')
             return
-        if self.path not in ('/notify', '/schedule', '/hotkey'):
+        if self.path not in ('/notify', '/schedule', '/hotkey', '/banner'):
             self.reply(404, b'not found')
             return
         length = int(self.headers.get('Content-Length', 0))
         data = json.loads(self.rfile.read(length) or b'{}')
+        if self.path == '/banner':
+            try:
+                clean = clean_banner(data)
+            except (TypeError, ValueError):
+                self.reply(400, b'bad banner settings')
+                return
+            banner.update(clean)
+            save_settings()
+            messages.put('banner')
+            self.reply_json(banner)
+            return
         if self.path == '/hotkey':
             hotkey_requests.put({'mods': int(data['mods']) & (MOD_ALT | MOD_CONTROL | MOD_SHIFT), 'vk': int(data['vk']), 'label': str(data['label'])[:40]})
             user32.PostThreadMessageW(hotkey_thread['id'], WM_APP, 0, 0)
@@ -354,16 +374,29 @@ def upcoming_text():
     return '\n'.join(text for _, _, text in items[:NEXT_COUNT])
 
 
-def load_hotkey():
-    if SETTINGS_FILE.exists():
-        saved = json.loads(SETTINGS_FILE.read_text(encoding='utf-8')).get('hotkey')
-        if saved:
-            hotkey.update(mods=saved['mods'], vk=saved['vk'], label=saved['label'])
+def clean_banner(data):
+    clean = {}
+    for key, (low, high) in BANNER_LIMITS.items():
+        clean[key] = min(high, max(low, int(data.get(key, BANNER_DEFAULTS[key]))))
+    align = data.get('align')
+    clean['align'] = align if align in ALIGNS else BANNER_DEFAULTS['align']
+    return clean
 
 
-def save_hotkey():
-    data = {'hotkey': {'mods': hotkey['mods'], 'vk': hotkey['vk'], 'label': hotkey['label']}}
-    SETTINGS_FILE.write_text(json.dumps(data, ensure_ascii=False), encoding='utf-8')
+def load_settings():
+    if not SETTINGS_FILE.exists():
+        return
+    saved = json.loads(SETTINGS_FILE.read_text(encoding='utf-8'))
+    if saved.get('hotkey'):
+        hotkey.update(mods=saved['hotkey']['mods'], vk=saved['hotkey']['vk'], label=saved['hotkey']['label'])
+    if saved.get('banner'):
+        banner.update(clean_banner(saved['banner']))
+
+
+def save_settings():
+    data = {'hotkey': {'mods': hotkey['mods'], 'vk': hotkey['vk'], 'label': hotkey['label']}, 'banner': dict(banner)}
+    with settings_lock:
+        SETTINGS_FILE.write_text(json.dumps(data, ensure_ascii=False), encoding='utf-8')
 
 
 def register_hotkey(mods, vk):
@@ -386,7 +419,7 @@ def hotkey_loop():
                 user32.UnregisterHotKey(None, 1)
             if register_hotkey(new['mods'], new['vk']):
                 hotkey.update(new, ok=True)
-                save_hotkey()
+                save_settings()
                 hotkey_results.put(True)
             else:
                 hotkey['ok'] = register_hotkey(hotkey['mods'], hotkey['vk'])
@@ -401,15 +434,20 @@ class Overlay:
         self.win = tk.Toplevel(root)
         self.win.overrideredirect(True)
         self.win.configure(bg='#f2b84b')
-        self.win.attributes('-alpha', 0.94)
-        self.body = tk.Frame(self.win, bg='#161920', padx=22, pady=14)
+        self.body = tk.Frame(self.win, bg='#161920')
         self.body.pack(padx=(5, 0), fill='both', expand=True)
+        self.apply_banner()
         self.win.update_idletasks()
         self.hwnd = int(self.win.wm_frame(), 16)
         style = user32.GetWindowLongW(self.hwnd, GWL_EXSTYLE)
         user32.SetWindowLongW(self.hwnd, GWL_EXSTYLE, style | WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE)
         user32.ShowWindow(self.hwnd, SW_HIDE)
         root.after(200, self.poll)
+
+    def apply_banner(self):
+        scale = banner['scale'] / 100
+        self.win.attributes('-alpha', banner['opacity'] / 100)
+        self.body.configure(padx=round(22 * scale), pady=round(14 * scale))
 
     def poll(self):
         changed = False
@@ -427,6 +465,10 @@ class Overlay:
             if message == 'next':
                 self.active = [m for m in self.active if m[3] != 'next']
                 self.active.append((time.monotonic() + schedule['seconds'], 'Что дальше', upcoming_text(), 'next'))
+            elif message == 'banner':
+                self.apply_banner()
+                self.active = [m for m in self.active if m[3] != 'preview']
+                self.active.append((time.monotonic() + PREVIEW_SECONDS, 'Так выглядит плашка', 'Размер и положение меняются в настройках трекера', 'preview'))
             else:
                 title, body, seconds = message
                 self.active.append((time.monotonic() + seconds, title, body, 'notify'))
@@ -446,14 +488,18 @@ class Overlay:
         if not self.active:
             user32.ShowWindow(self.hwnd, SW_HIDE)
             return
+        scale = banner['scale'] / 100
+        wrap = max(1, banner['width'] - 2 * round(22 * scale) - 5) if banner['width'] else 0
         for _, title, body, _ in self.active:
-            tk.Label(self.body, text=title, fg='#e7e9ef', bg='#161920', font=('Segoe UI', 26, 'bold'), anchor='w', justify='left').pack(fill='x')
+            tk.Label(self.body, text=title, fg='#e7e9ef', bg='#161920', font=('Segoe UI', round(26 * scale), 'bold'), anchor='w', justify='left', wraplength=wrap).pack(fill='x')
             if body:
-                tk.Label(self.body, text=body, fg='#8d94a5', bg='#161920', font=('Segoe UI', 16), anchor='w', justify='left').pack(fill='x', pady=(0, 6))
+                tk.Label(self.body, text=body, fg='#8d94a5', bg='#161920', font=('Segoe UI', round(16 * scale)), anchor='w', justify='left', wraplength=wrap).pack(fill='x', pady=(0, round(6 * scale)))
         self.win.update_idletasks()
-        w, h = self.win.winfo_reqwidth(), self.win.winfo_reqheight()
-        x = (self.win.winfo_screenwidth() - w) // 2
-        self.win.geometry(f'{w}x{h}+{x}+{TOP_OFFSET}')
+        w = banner['width'] or self.win.winfo_reqwidth()
+        h = banner['height'] or self.win.winfo_reqheight()
+        screen = self.win.winfo_screenwidth()
+        x = {'left': SIDE_MARGIN, 'center': (screen - w) // 2, 'right': screen - w - SIDE_MARGIN}[banner['align']]
+        self.win.geometry(f'{w}x{h}+{x}+{banner["top"]}')
         self.win.update_idletasks()
         user32.ShowWindow(self.hwnd, SW_SHOWNOACTIVATE)
         user32.SetWindowPos(self.hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW)
@@ -487,7 +533,7 @@ def main():
         if '--open' in sys.argv:
             webbrowser.open(page)
         return
-    load_hotkey()
+    load_settings()
     threading.Thread(target=hotkey_loop, daemon=True).start()
     threading.Thread(target=server.serve_forever, daemon=True).start()
 
