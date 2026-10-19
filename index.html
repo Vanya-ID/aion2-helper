@@ -252,7 +252,8 @@ footer ul { margin: var(--s1) 0 0; padding-left: 1.2rem; }
 .drawer-head h2 { margin: 0; font-size: var(--fs-lg); }
 .drawer-body { flex: 1; overflow: auto; overscroll-behavior: contain; padding: var(--s4) var(--s4) var(--s6); }
 .drawer.wide { width: min(760px, 100vw); }
-.note-tabs { display: flex; flex-wrap: wrap; gap: var(--s1); padding: var(--s3) var(--s4) 0; }
+.note-nav { display: grid; gap: var(--s2); padding: var(--s3) var(--s4) 0; }
+.note-tabs { display: flex; flex-wrap: wrap; gap: var(--s1); }
 .note-tabs .btn[aria-pressed=true] { background: color-mix(in srgb, var(--accent) 18%, var(--panel-2)); border-color: var(--accent); }
 .notes h3 { margin: var(--s5) 0 var(--s2); font-size: var(--fs-md); }
 .notes h3:first-child { margin-top: 0; }
@@ -514,7 +515,7 @@ label.opt { cursor: pointer; }
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
     </button>
   </div>
-  <div class="note-tabs" id="note-tabs"></div>
+  <div class="note-nav" id="note-nav"></div>
   <div class="drawer-body notes" id="note-body"></div>
 </aside>
 
@@ -1213,7 +1214,7 @@ const ACTIONS = {
     openDrawer('notes-drawer');
   },
   note: btn => {
-    noteIndex = Number(btn.dataset.i);
+    noteName = btn.dataset.name;
     renderNotes();
   },
   'drawer-close': closeDrawer,
@@ -1227,7 +1228,7 @@ let upKey = '';
 let launchAt = 0;
 let drawerReturn = null;
 let notes = [];
-let noteIndex = 0;
+let noteName = '';
 
 function svg(body) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
@@ -1465,10 +1466,17 @@ function loadNotes() {
 }
 
 function renderNotes() {
-  noteIndex = Math.min(noteIndex, Math.max(0, notes.length - 1));
   document.getElementById('notes-btn').hidden = !notes.length;
-  setHtml(document.getElementById('note-tabs'), notes.map((n, i) => `<button type="button" class="btn" data-act="note" data-i="${i}" aria-pressed="${i === noteIndex}">${n.name}</button>`).join(''));
-  setHtml(document.getElementById('note-body'), notes.length ? notes[noteIndex].text : '<p class="empty">Заметок нет.</p>');
+  const current = notes.find(n => n.name === noteName) || notes[0];
+  const groupOf = n => n.name.split('.')[0];
+  const group = current ? groupOf(current) : '';
+  const tab = (n, label, on, extra) => `<button type="button" class="btn ${extra}" data-act="note" data-name="${n.name}" aria-pressed="${on}">${label}</button>`;
+  const firsts = notes.filter((n, i) => notes.findIndex(m => groupOf(m) === groupOf(n)) === i);
+  const variants = notes.filter(n => groupOf(n) === group);
+  let nav = `<div class="note-tabs">${firsts.map(n => tab(n, groupOf(n), groupOf(n) === group, '')).join('')}</div>`;
+  if (variants.length > 1) nav += `<div class="note-tabs">${variants.map(n => tab(n, n.name.slice(group.length + 1), n === current, 'btn-sm')).join('')}</div>`;
+  setHtml(document.getElementById('note-nav'), nav);
+  setHtml(document.getElementById('note-body'), current ? current.text : '<p class="empty">Заметок нет.</p>');
 }
 
 function pingOverlay() {
