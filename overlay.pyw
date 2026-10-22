@@ -88,7 +88,6 @@ hotkey_requests = queue.Queue()
 hotkey_results = queue.Queue()
 hotkey_thread = {'id': None}
 update_state = {'running': False, 'error': ''}
-notes = {'dir': ''}
 
 
 def desktop_dir():
@@ -257,9 +256,6 @@ class Handler(SimpleHTTPRequestHandler):
         if self.path == '/banner':
             self.reply_json(banner)
             return
-        if self.path == '/notes':
-            self.reply_json(read_notes())
-            return
         if FROZEN:
             self.send_response(302)
             self.send_header('Location', SITE)
@@ -395,21 +391,12 @@ def load_settings():
         hotkey.update(mods=saved['hotkey']['mods'], vk=saved['hotkey']['vk'], label=saved['hotkey']['label'])
     if saved.get('banner'):
         banner.update(clean_banner(saved['banner']))
-    notes['dir'] = saved.get('notesDir', '')
 
 
 def save_settings():
     data = {'hotkey': {'mods': hotkey['mods'], 'vk': hotkey['vk'], 'label': hotkey['label']}, 'banner': dict(banner)}
-    if notes['dir']:
-        data['notesDir'] = notes['dir']
     with settings_lock:
         SETTINGS_FILE.write_text(json.dumps(data, ensure_ascii=False), encoding='utf-8')
-
-
-def read_notes():
-    if not notes['dir']:
-        return []
-    return [{'name': path.stem, 'text': path.read_text(encoding='utf-8')} for path in sorted(Path(notes['dir']).glob('*.html'))]
 
 
 def register_hotkey(mods, vk):
