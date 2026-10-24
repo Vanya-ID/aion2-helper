@@ -1187,8 +1187,7 @@ const BUILDS = [
   { id: 'ranger-pvp', name: 'Стрелок', variant: 'PvP' },
   { id: 'sorcerer', name: 'Волшебник' },
   { id: 'spiritmaster', name: 'Заклинатель' },
-  { id: 'cleric-dps', name: 'Целитель', variant: 'Урон' },
-  { id: 'cleric-heal', name: 'Целитель', variant: 'Хил' },
+  { id: 'cleric', name: 'Целитель', variant: 'PvE' },
   { id: 'cleric-pvp', name: 'Целитель', variant: 'PvP' },
   { id: 'chanter-dps', name: 'Чародей', variant: 'Урон' },
   { id: 'chanter-heal', name: 'Чародей', variant: 'Хил' },
@@ -1196,6 +1195,7 @@ const BUILDS = [
 const GUIDES = [
   { id: 'alts', name: 'Твинки' },
 ];
+const MOVED_BUILDS = { 'cleric-dps': 'cleric', 'cleric-heal': 'cleric' };
 const APPROX = '<span class="approx" title="Время не подтверждено в игре">≈</span>';
 const ICON = {
   bell: svg('<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>'),
@@ -1535,7 +1535,8 @@ function route() {
     return;
   }
   const all = BUILDS.concat(GUIDES);
-  const doc = all.find(d => d.id === m[1]) || all.find(d => d.id === readKey(BUILD_KEY)) || BUILDS[0];
+  const find = id => all.find(d => d.id === (MOVED_BUILDS[id] || id));
+  const doc = find(m[1]) || find(readKey(BUILD_KEY)) || BUILDS[0];
   if (doc.id !== m[1]) history.replaceState(null, '', `#builds/${doc.id}`);
   if (changed || doc.id !== buildId) window.scrollTo(0, 0);
   if (doc.id !== buildId) showBuild(doc);
