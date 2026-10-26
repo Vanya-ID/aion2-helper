@@ -15,7 +15,7 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-VERSION = '1.2.0'
+VERSION = '1.2.1'
 APP = 'Aion2Helper'
 PROTOCOL = 'aion2helper'
 REPO = 'Vanya-ID/aion2-helper'
@@ -88,6 +88,7 @@ hotkey_requests = queue.Queue()
 hotkey_results = queue.Queue()
 hotkey_thread = {'id': None}
 update_state = {'running': False, 'error': ''}
+webhook = {'url': ''}
 
 
 def desktop_dir():
@@ -315,6 +316,8 @@ class Handler(SimpleHTTPRequestHandler):
             schedule['seconds'] = seconds
         else:
             messages.put((str(data.get('title', '')), str(data.get('body', '')), seconds))
+            if webhook['url']:
+                threading.Thread(target=call_webhook, daemon=True).start()
         self.reply(204, b'')
 
     def end_headers(self):
@@ -342,6 +345,13 @@ class Handler(SimpleHTTPRequestHandler):
 
     def log_message(self, format, *args):
         pass
+
+
+def call_webhook():
+    try:
+        urllib.request.urlopen(urllib.request.Request(webhook['url'], method='POST'), timeout=2)
+    except OSError as error:
+        print(f'notify webhook {webhook["url"]} failed: {error!r}', file=sys.stderr)
 
 
 def fmt_left(ms):
@@ -391,10 +401,13 @@ def load_settings():
         hotkey.update(mods=saved['hotkey']['mods'], vk=saved['hotkey']['vk'], label=saved['hotkey']['label'])
     if saved.get('banner'):
         banner.update(clean_banner(saved['banner']))
+    webhook['url'] = str(saved.get('notify_webhook', ''))
 
 
 def save_settings():
     data = {'hotkey': {'mods': hotkey['mods'], 'vk': hotkey['vk'], 'label': hotkey['label']}, 'banner': dict(banner)}
+    if webhook['url']:
+        data['notify_webhook'] = webhook['url']
     with settings_lock:
         SETTINGS_FILE.write_text(json.dumps(data, ensure_ascii=False), encoding='utf-8')
 
